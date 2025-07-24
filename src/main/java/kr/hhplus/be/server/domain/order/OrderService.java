@@ -41,16 +41,14 @@ public class OrderService {
 
         Order order = Order.create(
             command.getUserId(), 
-            command.getUserCouponId(), 
-            orderProducts, 
-            command.getDiscountRate()
+            orderProducts
         );
         orderRepository.save(order);
 
-        return OrderInfo.Order.of(order.getId(), order.getTotalPrice(), order.getDiscountPrice());
+        return OrderInfo.Order.of(order.getId(), order.getTotalPrice());
     }
 
-    public OrderInfo.TopPaidProducts getTopPayProducts(OrderCommand.TopOrders command) {
+    public OrderInfo.TopPaidProducts getTopPaidProducts(OrderCommand.TopOrders command) {
         List<OrderProduct> orderProducts = orderRepository.findOrderIdsIn(command.getOrderIds());
 
         Map<Long, Integer> productQuantityMap = getProductQuantityMap(orderProducts);
@@ -59,7 +57,7 @@ public class OrderService {
         return OrderInfo.TopPaidProducts.of(sortedProductIds);
     }
 
-    public void payOrder(Long orderId) {
+    public void paidOrder(Long orderId) {
         Order order = orderRepository.findById(orderId);
         order.paid();
         orderRepository.sendOrderMessage(order);
