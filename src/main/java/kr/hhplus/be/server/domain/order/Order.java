@@ -33,22 +33,19 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderProduct> orderProducts = new ArrayList<>();
     
-    private Order(Long userId, Long userCouponId, List<OrderProduct> orderProducts, double discountRate) {
+    private Order(Long userId, List<OrderProduct> orderProducts) {
         this.userId = userId;
-        this.userCouponId = userCouponId;
         this.orderStatus = OrderStatus.CREATED;
 
         orderProducts.forEach(this::addOrderProduct);
         long calculatedTotalPrice = calculateTotalPrice(orderProducts);
-        long calculatedDiscountPrice = calculateDiscountPrice(calculatedTotalPrice, discountRate);
 
         this.totalPrice = calculatedTotalPrice;
-        this.discountPrice = calculatedDiscountPrice;
     }
 
-    public static Order create(Long userId, Long userCouponId, List<OrderProduct> orderProducts, double discountRate) {
+    public static Order create(Long userId, List<OrderProduct> orderProducts) {
         validateOrderProducts(orderProducts);
-        return new Order(userId, userCouponId, orderProducts, discountRate);
+        return new Order(userId, orderProducts);
     }
 
     public void paid() {
@@ -59,9 +56,9 @@ public class Order {
         return orderProducts.stream().mapToLong(OrderProduct::getPrice).sum();
     }
 
-    private long calculateDiscountPrice(long totalPrice, double discountRate) {
-        return (long) (totalPrice * discountRate);
-    }
+    // private long calculateDiscountPrice(long totalPrice, double discountRate) {
+    //     return (long) (totalPrice * discountRate);
+    // }
 
     private void addOrderProduct(OrderProduct orderProduct) {
         this.orderProducts.add(orderProduct);
