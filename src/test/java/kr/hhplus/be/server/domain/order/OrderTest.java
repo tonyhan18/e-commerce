@@ -3,6 +3,8 @@ package kr.hhplus.be.server.domain.order;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,54 +17,45 @@ class OrderTest {
     void createOrder() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1; // 10% 할인
-
-        OrderProduct orderProduct1 = OrderProduct.create(1L, "상품1", 10000L, 2);
-        OrderProduct orderProduct2 = OrderProduct.create(2L, "상품2", 5000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct1, orderProduct2);
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "상품1", 10000L, 2),
+            OrderProduct.create(2L, "상품2", 5000L, 1)
+        );
 
         // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
+        Order order = Order.create(userId, orderProducts);
 
         // then
         assertThat(order.getUserId()).isEqualTo(userId);
-        assertThat(order.getUserCouponId()).isEqualTo(userCouponId);
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED);
-        
-        // 총 가격: (10000 * 2) + (5000 * 1) = 25000
-        assertThat(order.getTotalPrice()).isEqualTo(25000L);
-        
-        // 할인 가격: 25000 * 0.1 = 2500
-        assertThat(order.getDiscountPrice()).isEqualTo(2500L);
+        assertThat(order.getTotalPrice()).isEqualTo(25000L); // (10000 * 2) + (5000 * 1)
+        assertThat(order.getOrderProducts()).hasSize(2);
+        assertThat(order.getUserCouponId()).isNull();
+        assertThat(order.getDiscountPrice()).isEqualTo(0L);
     }
 
     @Test
-    @DisplayName("주문 상품이 없으면 예외가 발생한다.")
-    void createOrderWithEmptyProducts() {
+    @DisplayName("주문 상품이 null이면 예외가 발생한다.")
+    void createOrderWithNullOrderProducts() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-        List<OrderProduct> orderProducts = List.of();
+        List<OrderProduct> orderProducts = null;
 
         // when & then
-        assertThatThrownBy(() -> Order.create(userId, userCouponId, orderProducts, discountRate))
+        assertThatThrownBy(() -> Order.create(userId, orderProducts))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("주문 상품이 없습니다.");
     }
 
     @Test
-    @DisplayName("주문 상품이 null이면 예외가 발생한다.")
-    void createOrderWithNullProducts() {
+    @DisplayName("주문 상품이 비어있으면 예외가 발생한다.")
+    void createOrderWithEmptyOrderProducts() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-        List<OrderProduct> orderProducts = null;
+        List<OrderProduct> orderProducts = new ArrayList<>();
 
         // when & then
-        assertThatThrownBy(() -> Order.create(userId, userCouponId, orderProducts, discountRate))
+        assertThatThrownBy(() -> Order.create(userId, orderProducts))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("주문 상품이 없습니다.");
     }
@@ -72,59 +65,18 @@ class OrderTest {
     void createOrderWithSingleProduct() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.2; // 20% 할인
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "단일 상품", 15000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "단일 상품", 15000L, 1)
+        );
 
         // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
+        Order order = Order.create(userId, orderProducts);
 
         // then
         assertThat(order.getUserId()).isEqualTo(userId);
-        assertThat(order.getUserCouponId()).isEqualTo(userCouponId);
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED);
         assertThat(order.getTotalPrice()).isEqualTo(15000L);
-        assertThat(order.getDiscountPrice()).isEqualTo(3000L); // 15000 * 0.2
-    }
-
-    @Test
-    @DisplayName("할인율이 0일 때 주문을 생성할 수 있다.")
-    void createOrderWithZeroDiscountRate() {
-        // given
-        Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.0; // 0% 할인
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
-
-        // then
-        assertThat(order.getTotalPrice()).isEqualTo(10000L);
-        assertThat(order.getDiscountPrice()).isEqualTo(0L); // 10000 * 0.0
-    }
-
-    @Test
-    @DisplayName("할인율이 1일 때 주문을 생성할 수 있다.")
-    void createOrderWithFullDiscountRate() {
-        // given
-        Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 1.0; // 100% 할인
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
-
-        // then
-        assertThat(order.getTotalPrice()).isEqualTo(10000L);
-        assertThat(order.getDiscountPrice()).isEqualTo(10000L); // 10000 * 1.0
+        assertThat(order.getOrderProducts()).hasSize(1);
     }
 
     @Test
@@ -132,241 +84,119 @@ class OrderTest {
     void createOrderWithMultipleProducts() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.15; // 15% 할인
-
-        OrderProduct orderProduct1 = OrderProduct.create(1L, "상품1", 10000L, 3);
-        OrderProduct orderProduct2 = OrderProduct.create(2L, "상품2", 5000L, 2);
-        OrderProduct orderProduct3 = OrderProduct.create(3L, "상품3", 2000L, 5);
-        List<OrderProduct> orderProducts = List.of(orderProduct1, orderProduct2, orderProduct3);
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "상품1", 10000L, 3),
+            OrderProduct.create(2L, "상품2", 5000L, 2),
+            OrderProduct.create(3L, "상품3", 20000L, 1)
+        );
 
         // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
-
-        // then
-        // 총 가격: (10000 * 3) + (5000 * 2) + (2000 * 5) = 30000 + 10000 + 10000 = 50000
-        assertThat(order.getTotalPrice()).isEqualTo(50000L);
-        
-        // 할인 가격: 50000 * 0.15 = 7500
-        assertThat(order.getDiscountPrice()).isEqualTo(7500L);
-    }
-
-    @Test
-    @DisplayName("주문을 결제할 수 있다.")
-    void payOrder() {
-        // given
-        Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
-
-        // when
-        order.paid();
-
-        // then
-        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
-    }
-
-    @Test
-    @DisplayName("쿠폰이 없는 주문을 생성할 수 있다.")
-    void createOrderWithoutCoupon() {
-        // given
-        Long userId = 1L;
-        Long userCouponId = null;
-        double discountRate = 0.0;
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
+        Order order = Order.create(userId, orderProducts);
 
         // then
         assertThat(order.getUserId()).isEqualTo(userId);
-        assertThat(order.getUserCouponId()).isNull();
-        assertThat(order.getTotalPrice()).isEqualTo(10000L);
-        assertThat(order.getDiscountPrice()).isEqualTo(0L);
-    }
-
-    @Test
-    @DisplayName("수량이 많은 상품으로 주문을 생성할 수 있다.")
-    void createOrderWithHighQuantity() {
-        // given
-        Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.05; // 5% 할인
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "대량 상품", 1000L, 100);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
-
-        // then
-        // 총 가격: 1000 * 100 = 100000
-        assertThat(order.getTotalPrice()).isEqualTo(100000L);
-        
-        // 할인 가격: 100000 * 0.05 = 5000
-        assertThat(order.getDiscountPrice()).isEqualTo(5000L);
-    }
-
-    @Test
-    @DisplayName("가격이 0인 상품으로 주문을 생성할 수 있다.")
-    void createOrderWithZeroPriceProduct() {
-        // given
-        Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "무료 상품", 0L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
-
-        // then
-        assertThat(order.getTotalPrice()).isEqualTo(0L);
-        assertThat(order.getDiscountPrice()).isEqualTo(0L);
-    }
-
-    @Test
-    @DisplayName("주문 생성 후 결제 상태를 확인할 수 있다.")
-    void checkOrderStatusAfterCreation() {
-        // given
-        Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
-
-        // then
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED);
-        
-        // 결제 후
-        order.paid();
-        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+        assertThat(order.getTotalPrice()).isEqualTo(60000L); // (10000 * 3) + (5000 * 2) + (20000 * 1)
+        assertThat(order.getOrderProducts()).hasSize(3);
     }
 
     @Test
-    @DisplayName("할인율이 소수점인 경우 주문을 생성할 수 있다.")
-    void createOrderWithDecimalDiscountRate() {
+    @DisplayName("주문 상태를 결제 완료로 변경할 수 있다.")
+    void paid() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.123; // 12.3% 할인
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
-
-        // then
-        assertThat(order.getTotalPrice()).isEqualTo(10000L);
-        assertThat(order.getDiscountPrice()).isEqualTo(1230L); // 10000 * 0.123 = 1230
-    }
-
-    @Test
-    @DisplayName("여러 번 결제를 시도해도 상태가 변경되지 않는다.")
-    void payOrderMultipleTimes() {
-        // given
-        Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
-
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "상품1", 10000L, 1)
+        );
+        Order order = Order.create(userId, orderProducts);
 
         // when
         order.paid();
-        order.paid(); // 두 번째 결제 시도
 
         // then
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
     }
 
     @Test
-    @DisplayName("주문 상품 목록을 확인할 수 있다.")
-    void getOrderProducts() {
+    @DisplayName("주문 상품의 가격이 올바르게 계산된다.")
+    void calculateTotalPrice() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-
-        OrderProduct orderProduct1 = OrderProduct.create(1L, "상품1", 10000L, 1);
-        OrderProduct orderProduct2 = OrderProduct.create(2L, "상품2", 5000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct1, orderProduct2);
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "상품1", 10000L, 2), // 20000
+            OrderProduct.create(2L, "상품2", 5000L, 3),  // 15000
+            OrderProduct.create(3L, "상품3", 25000L, 1)  // 25000
+        );
 
         // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
+        Order order = Order.create(userId, orderProducts);
 
         // then
-        assertThat(order.getOrderProducts()).hasSize(2);
-        assertThat(order.getOrderProducts()).contains(orderProduct1, orderProduct2);
+        assertThat(order.getTotalPrice()).isEqualTo(60000L);
     }
 
     @Test
-    @DisplayName("주문 상품이 Order와 양방향 관계를 가지는지 확인한다.")
-    void checkOrderProductBidirectionalRelationship() {
+    @DisplayName("주문 상품과 주문이 양방향으로 연결된다.")
+    void orderProductBidirectionalRelationship() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "상품1", 10000L, 1)
+        );
 
         // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
+        Order order = Order.create(userId, orderProducts);
 
         // then
         assertThat(order.getOrderProducts()).hasSize(1);
-        assertThat(orderProduct.getOrder()).isEqualTo(order);
+        assertThat(order.getOrderProducts().get(0).getOrder()).isEqualTo(order);
     }
 
     @Test
-    @DisplayName("주문 생성 시 초기 상태가 CREATED인지 확인한다.")
-    void checkInitialOrderStatus() {
+    @DisplayName("주문 생성 시 할인 가격은 0으로 초기화된다.")
+    void discountPriceInitializedToZero() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "상품1", 10000L, 1)
+        );
 
         // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
+        Order order = Order.create(userId, orderProducts);
 
         // then
-        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CREATED);
+        assertThat(order.getDiscountPrice()).isEqualTo(0L);
     }
 
     @Test
-    @DisplayName("주문 ID는 생성 시점에 null인지 확인한다.")
-    void checkOrderIdIsNullOnCreation() {
+    @DisplayName("주문 생성 시 쿠폰 ID는 null로 초기화된다.")
+    void userCouponIdInitializedToNull() {
         // given
         Long userId = 1L;
-        Long userCouponId = 1L;
-        double discountRate = 0.1;
-
-        OrderProduct orderProduct = OrderProduct.create(1L, "상품", 10000L, 1);
-        List<OrderProduct> orderProducts = List.of(orderProduct);
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "상품1", 10000L, 1)
+        );
 
         // when
-        Order order = Order.create(userId, userCouponId, orderProducts, discountRate);
+        Order order = Order.create(userId, orderProducts);
 
         // then
-        assertThat(order.getId()).isNull(); // ID는 저장 시점에 생성됨
+        assertThat(order.getUserCouponId()).isNull();
+    }
+
+    @Test
+    @DisplayName("주문 ID는 생성 시점에 null이다.")
+    void orderIdIsNullOnCreation() {
+        // given
+        Long userId = 1L;
+        List<OrderProduct> orderProducts = Arrays.asList(
+            OrderProduct.create(1L, "상품1", 10000L, 1)
+        );
+
+        // when
+        Order order = Order.create(userId, orderProducts);
+
+        // then
+        assertThat(order.getId()).isNull();
     }
 } 
