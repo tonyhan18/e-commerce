@@ -13,13 +13,16 @@ public class OrderInfo {
         private final Long orderId;
         private final Long totalPrice;
 
-        private Order(Long orderId, Long totalPrice) {
+        private final Long discountPrice;
+
+        private Order(Long orderId, Long totalPrice, Long discountPrice) {
             this.orderId = orderId;
             this.totalPrice = totalPrice;
+            this.discountPrice = discountPrice;
         }
 
-        public static Order of(Long orderId, Long totalPrice) {
-            return new Order(orderId, totalPrice);
+        public static Order of(Long orderId, Long totalPrice, Long discountPrice) {
+            return new Order(orderId, totalPrice, discountPrice);
         }
     }
 
