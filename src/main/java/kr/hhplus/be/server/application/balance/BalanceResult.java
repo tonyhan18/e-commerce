@@ -8,14 +8,14 @@ import lombok.NoArgsConstructor;
 public class BalanceResult {
     @Getter
     public static class Balance{
-        private final Long amount;
+        private final Long balance;
 
-        public Balance(Long amount) {
-            this.amount = amount;
+        public Balance(Long balance) {
+            this.balance = balance;
         }
 
-        public static Balance of(Long amount) {
-            return new Balance(amount);
+        public static Balance of(Long balance) {
+            return new Balance(balance);
         }
     }
 }

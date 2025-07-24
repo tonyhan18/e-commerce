@@ -18,7 +18,7 @@ public class BalanceResponse {
         }
 
         public static Balance of(BalanceResult.Balance balance) {
-            return new Balance(balance.getAmount());
+            return new Balance(balance.getBalance());
         }
     }
 } 
