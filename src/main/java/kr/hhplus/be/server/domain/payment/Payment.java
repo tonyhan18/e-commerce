@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,6 +26,7 @@ public class Payment {
 
     private LocalDateTime paidAt;
 
+    @Builder    
     private Payment(
         Long id,
         Long orderId, 
@@ -42,7 +44,14 @@ public class Payment {
     }
 
     public static Payment create(Long orderId, Long amount) {
-        return new Payment(null, orderId, amount, PaymentMethod.UNKNOWN, PaymentStatus.READY, null);
+        validateAmount(amount);
+
+        return Payment.builder()
+            .orderId(orderId)
+            .amount(amount)
+            .paymentMethod(PaymentMethod.UNKNOWN) // 
+            .paymentStatus(PaymentStatus.READY) // 초기 상태는 결제 대기
+            .build();
     }
 
     public void pay() {
