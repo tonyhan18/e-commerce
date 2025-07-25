@@ -38,6 +38,10 @@ dependencies {
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 
+    // Lombok
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
@@ -50,4 +54,10 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 	systemProperty("user.timezone", "UTC")
+	// Java 17에서 Mockito ByteBuddy 문제 해결
+	jvmArgs(
+		"-XX:+IgnoreUnrecognizedVMOptions",
+		"-XX:+UseSerialGC",
+		"-Dnet.bytebuddy.agent.attacher.dump=bytebuddy.log"
+	)
 }
