@@ -19,8 +19,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import kr.hhplus.be.server.domain.stock.StockCommand;
+import kr.hhplus.be.server.domain.stock.StockCommand.OrderProducts;
 
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(MockitoExtension.class)
 class OrderFacadeTest {
@@ -117,5 +120,41 @@ class OrderFacadeTest {
         verify(stockService, times(1)).deductStock(any());
         verify(paymentService, times(1)).pay(any());
         verify(orderService, times(1)).paidOrder(123L);
+    }
+
+    @Test
+    @DisplayName("결제 실패 시 재고가 복구된다.")
+    void orderPayment_whenPaymentFails_thenStockIsRestored() {
+        // given
+        OrderCriteria.OrderPayment criteria = mock(OrderCriteria.OrderPayment.class);
+        when(criteria.getUserId()).thenReturn(1L);
+        when(criteria.getUserCouponId()).thenReturn(null);
+        when(criteria.toBalanceCommand(anyLong())).thenReturn(null);
+
+        ProductInfo.OrderProducts orderProducts = mock(ProductInfo.OrderProducts.class);
+        when(productService.getOrderProducts(any())).thenReturn(orderProducts);
+
+        StockCommand.OrderProducts stockCommand = mock(StockCommand.OrderProducts.class);
+        when(criteria.toStockCommand()).thenReturn(stockCommand);
+
+        OrderInfo.Order order = mock(OrderInfo.Order.class);
+        when(orderService.createOrder(any())).thenReturn(order);
+        when(order.getTotalPrice()).thenReturn(10000L);
+
+        doThrow(new RuntimeException("결제 실패!")).when(paymentService).pay(any());
+
+        // when & then
+        try {
+            orderFacade.orderPayment(criteria);
+        } catch (Exception e) {
+            // then
+            verify(stockService, times(1)).addStock(stockCommand);
+            verify(stockService, times(1)).deductStock(stockCommand);
+            verify(balanceService, times(1)).useBalance(any());
+            verify(paymentService, times(1)).pay(any());
+            verify(orderService, never()).paidOrder(any());
+            return;
+        }
+        fail("예외가 발생해야 합니다.");
     }
 }
