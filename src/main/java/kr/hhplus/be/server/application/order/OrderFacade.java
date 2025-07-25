@@ -55,7 +55,13 @@ public class OrderFacade {
         balanceService.useBalance(criteria.toBalanceCommand(order.getTotalPrice()));
         optionalUserCoupon.ifPresent(userCoupon -> userCouponService.useUserCoupon(userCoupon.getUserCouponId()));
         stockService.deductStock(criteria.toStockCommand());
-        paymentService.pay(criteria.toPaymentCommand(order));
+        try {
+            paymentService.pay(criteria.toPaymentCommand(order));
+        } catch (Exception e) {
+            // 결제 실패 시 재고 복구
+            stockService.addStock(criteria.toStockCommand());
+            throw e;
+        }
         orderService.paidOrder(order.getOrderId());
     }
 }
