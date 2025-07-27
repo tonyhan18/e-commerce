@@ -41,11 +41,13 @@ public class OrderService {
 
         Order order = Order.create(
             command.getUserId(), 
-            orderProducts
+            orderProducts,
+            command.getUserCouponId(),
+            command.getDiscountRate()
         );
         orderRepository.save(order);
 
-        return OrderInfo.Order.of(order.getId(), order.getTotalPrice());
+        return OrderInfo.Order.of(order.getId(), order.getTotalPrice(), order.getDiscountPrice());
     }
 
     public OrderInfo.TopPaidProducts getTopPaidProducts(OrderCommand.TopOrders command) {

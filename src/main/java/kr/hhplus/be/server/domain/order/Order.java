@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.aspectj.weaver.ast.Or;
+
 import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.order.OrderStatus;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -33,19 +36,28 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderProduct> orderProducts = new ArrayList<>();
     
-    private Order(Long userId, List<OrderProduct> orderProducts) {
+    @Builder
+    private Order(Long userId, List<OrderProduct> orderProducts, Long userCouponId, double discountRate) {
         this.userId = userId;
+        this.userCouponId = userCouponId;
         this.orderStatus = OrderStatus.CREATED;
 
         orderProducts.forEach(this::addOrderProduct);
         long calculatedTotalPrice = calculateTotalPrice(orderProducts);
+        long calculatedDiscountPrice = calculateDiscountPrice(calculatedTotalPrice, discountRate);
 
-        this.totalPrice = calculatedTotalPrice;
+        this.totalPrice = calculatedTotalPrice - calculatedDiscountPrice;
+        this.discountPrice = calculatedDiscountPrice;
     }
 
-    public static Order create(Long userId, List<OrderProduct> orderProducts) {
+    public static Order create(Long userId, List<OrderProduct> orderProducts, Long userCouponId, double discountRate) {
         validateOrderProducts(orderProducts);
-        return new Order(userId, orderProducts);
+        return Order.builder()
+                .userId(userId)
+                .orderProducts(orderProducts)
+                .userCouponId(userCouponId)
+                .discountRate(discountRate)
+                .build();
     }
 
     public void paid() {
@@ -56,9 +68,9 @@ public class Order {
         return orderProducts.stream().mapToLong(OrderProduct::getPrice).sum();
     }
 
-    // private long calculateDiscountPrice(long totalPrice, double discountRate) {
-    //     return (long) (totalPrice * discountRate);
-    // }
+    private long calculateDiscountPrice(long totalPrice, double discountRate) {
+        return (long) (totalPrice * discountRate);
+    }
 
     private void addOrderProduct(OrderProduct orderProduct) {
         this.orderProducts.add(orderProduct);

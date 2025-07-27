@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.application.product;
 
-import kr.hhplus.be.server.application.product.ProductResult.Products;
 import kr.hhplus.be.server.domain.stock.StockService;
 import kr.hhplus.be.server.domain.stock.StockInfo;
 import kr.hhplus.be.server.domain.product.ProductService;

@@ -7,6 +7,7 @@ import kr.hhplus.be.server.domain.payment.PaymentCommand;
 import kr.hhplus.be.server.domain.product.ProductCommand;
 import kr.hhplus.be.server.domain.product.ProductInfo;
 import kr.hhplus.be.server.domain.stock.StockCommand;
+import kr.hhplus.be.server.domain.user.UserCouponCommand;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,14 +22,16 @@ public class OrderCriteria {
 
         private final Long userId;
         private final List<OrderProduct> products;
+        private final Long userCouponId;
 
-        private OrderPayment(Long userId, List<OrderProduct> products) {
+        private OrderPayment(Long userId, List<OrderProduct> products, Long userCouponId) {
             this.userId = userId;
             this.products = products;
+            this.userCouponId = userCouponId;
         }
 
-        public static OrderPayment of(Long userId,  List<OrderProduct> products) {
-            return new OrderPayment(userId, products);
+        public static OrderPayment of(Long userId, List<OrderProduct> products, Long userCouponId) {
+            return new OrderPayment(userId, products, userCouponId);
         }
 
         public ProductCommand.OrderProducts toProductCommand() {
@@ -39,7 +42,7 @@ public class OrderCriteria {
             );
         }
 
-        public OrderCommand.Create toOrderCommand(ProductInfo.OrderProducts productInfo) {
+        public OrderCommand.Create toOrderCommand(ProductInfo.OrderProducts productInfo, Long userCouponId, double discountRate) {
             List<OrderCommand.OrderProduct> orderProducts = productInfo.getProducts().stream()
                 .map(p -> OrderCommand.OrderProduct.builder()
                     .productId(p.getProductId())
@@ -49,7 +52,11 @@ public class OrderCriteria {
                     .build()
                 ).toList();
 
-            return OrderCommand.Create.of(userId, orderProducts);
+            return OrderCommand.Create.of(userId, orderProducts, userCouponId, discountRate);
+        }
+
+        public UserCouponCommand.UsableCoupon toCouponCommand() {
+            return UserCouponCommand.UsableCoupon.of(userId, userCouponId);
         }
 
         public BalanceCommand.Use toBalanceCommand(long totalPrice) {

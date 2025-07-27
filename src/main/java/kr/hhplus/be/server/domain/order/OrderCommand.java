@@ -15,17 +15,23 @@ public class OrderCommand {
 
         private final Long userId;
         private final List<OrderProduct> products;
+        private final Double discountRate;
+        private final Long UserCouponId;
 
         @Builder
-        private Create(Long userId, List<OrderProduct> products) {
+        private Create(Long userId, List<OrderProduct> products, Long userCouponId, Double discountRate) {
             this.userId = userId;
             this.products = products;
+            this.UserCouponId = userCouponId;
+            this.discountRate = discountRate;
         }
 
-        public static Create of(Long userId, List<OrderProduct> products) {
+        public static Create of(Long userId, List<OrderProduct> products, Long userCouponId, Double discountRate) {
             return Create.builder()
                 .userId(userId)
                 .products(products)
+                .userCouponId(userCouponId)
+                .discountRate(discountRate)
                 .build();
         }
     }

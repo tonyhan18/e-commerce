@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Arrays;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -38,8 +40,28 @@ class OrderControllerTest {
     @DisplayName("orderPayment API는 정상적으로 동작한다.")
     void orderPayment() throws Exception {
         // given
-        OrderRequest.OrderPayment request = mock(OrderRequest.OrderPayment.class);
-        when(request.toCriteria()).thenReturn(mock(kr.hhplus.be.server.application.order.OrderCriteria.OrderPayment.class));
+        OrderRequest.OrderProduct orderProduct = OrderRequest.OrderProduct.of(1L, 2);
+
+        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(1L, Arrays.asList(orderProduct), null);
+
+        String json = objectMapper.writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(post("/api/v1/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk());
+        verify(orderFacade, times(1)).orderPayment(any());
+    }
+
+    @Test
+    @DisplayName("쿠폰이 있는 주문 결제 API는 정상적으로 동작한다.")
+    void orderPaymentWithCoupon() throws Exception {
+        // given
+        OrderRequest.OrderProduct orderProduct = OrderRequest.OrderProduct.of(1L, 1);
+
+        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(1L, Arrays.asList(orderProduct), 1L);
+
         String json = objectMapper.writeValueAsString(request);
 
         // when & then

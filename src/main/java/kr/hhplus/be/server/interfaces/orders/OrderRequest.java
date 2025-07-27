@@ -21,23 +21,26 @@ public class OrderRequest {
         @NotNull(message = "사용자 ID는 필수 입니다.")
         private Long userId;
 
+        private Long userCouponId;
+
         @Valid
         @NotEmpty(message = "상품 목록은 1개 이상이여야 합니다.")
         private List<OrderProduct> products;
 
-        private OrderPayment(Long userId, List<OrderProduct> products) {
+        private OrderPayment(Long userId, List<OrderProduct> products, Long userCouponId) {
             this.userId = userId;
             this.products = products;
+            this.userCouponId = userCouponId;
         }
 
-        public static OrderPayment of(Long userId, List<OrderProduct> products) {
-            return new OrderPayment(userId, products);
+        public static OrderPayment of(Long userId, List<OrderProduct> products, Long userCouponId) {
+            return new OrderPayment(userId, products, userCouponId);
         }
 
         public OrderCriteria.OrderPayment toCriteria() {
             return OrderCriteria.OrderPayment.of(userId, products.stream()
                     .map(OrderProduct::toCriteria)
-                    .toList());
+                    .toList(), userCouponId);
         }
     }
 
