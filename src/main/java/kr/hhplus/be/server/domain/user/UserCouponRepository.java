@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.domain.user;
 
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
 @Repository

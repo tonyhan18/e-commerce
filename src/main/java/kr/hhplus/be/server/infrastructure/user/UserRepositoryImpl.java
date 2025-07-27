@@ -1,9 +1,9 @@
 package kr.hhplus.be.server.infrastructure.user;
 
 import kr.hhplus.be.server.domain.user.*;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
-@Repository
+@Component
 public class UserRepositoryImpl implements UserRepository {
     @Override
     public User findById(Long id) {

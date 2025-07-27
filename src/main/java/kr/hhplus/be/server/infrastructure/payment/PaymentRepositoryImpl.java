@@ -1,12 +1,12 @@
 package kr.hhplus.be.server.infrastructure.payment;
 
 import kr.hhplus.be.server.domain.payment.*;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Repository
+@Component
 public class PaymentRepositoryImpl implements PaymentRepository {
     @Override
     public Payment save(Payment payment) {

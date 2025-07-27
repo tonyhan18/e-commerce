@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.infrastructure.order;
 
 import kr.hhplus.be.server.domain.order.*;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Repository
+@Component
 public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public Order save(Order order) {

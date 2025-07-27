@@ -1,11 +1,11 @@
 package kr.hhplus.be.server.infrastructure.product;
 
 import kr.hhplus.be.server.domain.product.*;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Repository
+@Component
 public class ProductRespositoryImpl implements ProductRespository {
     @Override
     public Product findById(Long productId) {
