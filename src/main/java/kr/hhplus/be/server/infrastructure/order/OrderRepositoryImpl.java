@@ -1,32 +1,31 @@
 package kr.hhplus.be.server.infrastructure.order;
 
 import kr.hhplus.be.server.domain.order.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class OrderRepositoryImpl implements OrderRepository {
+    
+    private final OrderJpaRepository orderJpaRepository;
+    private final OrderProductJpaRepository orderProductJpaRepository;
+
     @Override
     public Order save(Order order) {
-        // TODO: 실제 DB 연동 로직 구현
-        return order;
+        return orderJpaRepository.save(order);
     }
 
     @Override
     public Order findById(Long id) {
-        // TODO: 실제 DB 연동 로직 구현
-        return null;
-    }
-
-    @Override
-    public void sendOrderMessage(Order order) {
-        // TODO: 메시지 큐 연동 등 구현
+        return orderJpaRepository.findById(id)
+            .orElseThrow(() -> new OrderNotFoundException("주문이 존재하지 않습니다. : " + id));
     }
 
     @Override
     public List<OrderProduct> findOrderIdsIn(List<Long> orderIds) {
-        // TODO: 실제 DB 연동 로직 구현
-        return null;
+        return orderProductJpaRepository.findByOrderIdIn(orderIds);
     }
 } 
