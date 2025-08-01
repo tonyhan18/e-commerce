@@ -233,9 +233,3 @@ public Balance getBalance(Long userId) {
     return balanceRepository.findByUserId(userId);
 }
 ```
-
----
-
-**작성일**: 2025-08-01  
-**작성자**: AI Assistant  
-**검토자**: [검토자명] 
