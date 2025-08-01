@@ -11,11 +11,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class BalanceFacadeTest {
+class BalanceFacadeIntegrationTest {
 
     @Mock
     private UserService userService;
@@ -43,6 +44,24 @@ class BalanceFacadeTest {
     }
 
     @Test
+    @DisplayName("잔액 충전 - 사용자 없음")
+    void chargeBalance_userNotFound() {
+        // given
+        Long userId = 999L;
+        Long amount = 10000L;
+        BalanceCriteria.Charge criteria = BalanceCriteria.Charge.of(userId, amount);
+        doThrow(new IllegalArgumentException("User not found"))
+            .when(userService).getUser(userId);
+
+        // when & then
+        assertThatThrownBy(() -> balanceFacade.chargeBalance(criteria))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("User not found");
+        verify(userService, times(1)).getUser(userId);
+        verify(balanceService, never()).chargeBalance(any());
+    }
+
+    @Test
     @DisplayName("잔액 조회 - 성공")
     void getBalance_success() {
         // given
@@ -60,5 +79,21 @@ class BalanceFacadeTest {
         assertThat(result.getBalance()).isEqualTo(balanceAmount);
         verify(userService, times(1)).getUser(userId);
         verify(balanceService, times(1)).getBalance(userId);
+    }
+
+    @Test
+    @DisplayName("잔액 조회 - 사용자 없음")
+    void getBalance_userNotFound() {
+        // given
+        Long userId = 999L;
+        doThrow(new IllegalArgumentException("User not found"))
+            .when(userService).getUser(userId);
+
+        // when & then
+        assertThatThrownBy(() -> balanceFacade.getBalance(userId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("User not found");
+        verify(userService, times(1)).getUser(userId);
+        verify(balanceService, never()).getBalance(any());
     }
 } 
