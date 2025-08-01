@@ -10,11 +10,20 @@ import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 
 import lombok.Getter;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AccessLevel;
 @Getter
 @Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "balance_transaction", indexes = {
+    @Index(name = "idx_balance_transaction_balance_id", columnList = "balance_id"),
+    @Index(name = "idx_balance_transaction_type", columnList = "transactionType")
+})
 public class BalanceTransaction {
     @Id
     @Column(name = "id")

@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 public interface CouponRepository {
 
     Coupon findById(Long couponId);
+    Coupon save(Coupon coupon);
 }
