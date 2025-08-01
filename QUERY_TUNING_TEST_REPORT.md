@@ -245,5 +245,3 @@ ANALYZE TABLE orders, product, payment;
 ---
 
 **보고서 작성일**: 2025-08-01  
-**테스트 담당자**: AI Assistant  
-**검토자**: [검토자명] 
