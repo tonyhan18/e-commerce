@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface PaymentRepository {
     Payment save(Payment payment);
     Optional<Payment> findById(Long id);
-    List<Payment> findCompletedPaymentsWithin(List<PaymentStatus> statuses, LocalDateTime startDateTime, LocalDateTime endDateTime)
+    List<Payment> findCompletedPaymentsWithIn(List<PaymentStatus> statuses, LocalDateTime startDateTime, LocalDateTime endDateTime);
 }

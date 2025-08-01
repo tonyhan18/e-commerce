@@ -21,7 +21,10 @@ public class Payment {
 
     private Long amount;
 
+    @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+
+    @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
     private LocalDateTime paidAt;

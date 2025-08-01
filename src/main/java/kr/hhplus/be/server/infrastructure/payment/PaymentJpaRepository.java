@@ -11,5 +11,6 @@ import java.util.List;
 
 public interface PaymentJpaRepository extends JpaRepository<Payment, Long> {
 
-    List<Payment> findByPaymentStatusInAndPaidAtBetween(Collection<PaymentStatus> paymentStatuses, LocalDateTime paidAtStart, LocalDateTime paidAtEnd);
+    List<Payment> findByPaymentStatusInAndPaidAtBetween(
+        Collection<PaymentStatus> paymentStatuses, LocalDateTime paidAtStart, LocalDateTime paidAtEnd);
 }
