@@ -3,9 +3,9 @@ package kr.hhplus.be.server.infrastructure.coupon;
 import kr.hhplus.be.server.domain.coupon.Coupon;
 import kr.hhplus.be.server.domain.coupon.CouponRepository;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
-@Repository
+@Component
 public class CouponRepositoryImpl implements CouponRepository {
 
     @Override

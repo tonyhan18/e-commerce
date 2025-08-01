@@ -1,7 +1,9 @@
 package kr.hhplus.be.server.domain.balance;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 public class BalanceService {
     private final BalanceRepository balanceRepository;

@@ -83,6 +83,10 @@ public class Balance {
         if(balance < 0) {
             throw new IllegalArgumentException("잔액은 0원 이상이어야 합니다.");
         }
+
+        if(balance > MAX_BALANCE_AMOUNT) {
+            throw new IllegalArgumentException("최대 잔액 초과");
+        }
     }
 
 }

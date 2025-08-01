@@ -8,12 +8,22 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiControllerAdvice {
-    @ExceptionHandler(Exception.class)
+    
+    @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<Object> handleException(BindException e) {
+    public ApiResponse<Object> handleBindException(BindException e) {
         return ApiResponse.fail(
             HttpStatus.BAD_REQUEST.value(), 
             e.getBindingResult().getAllErrors().get(0).getDefaultMessage()
+        );
+    }
+    
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiResponse<Object> handleException(Exception e) {
+        return ApiResponse.fail(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(), 
+            "서버 내부 오류가 발생했습니다."
         );
     }
 }
