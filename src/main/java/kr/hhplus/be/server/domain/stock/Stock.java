@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
 public class Stock {
     @Id
     @Column(name = "stock_id")
@@ -52,6 +51,7 @@ public class Stock {
     public boolean isNotEmpty() {
         return !isEmpty();
     }
+    
     private static void validateQuantity(int quantity) {
         if (quantity < 0) {
             throw new IllegalArgumentException("재고는 0보다 작을 수 없습니다.");

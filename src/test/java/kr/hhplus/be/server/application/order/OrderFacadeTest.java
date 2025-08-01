@@ -19,142 +19,155 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import kr.hhplus.be.server.domain.stock.StockCommand;
-import kr.hhplus.be.server.domain.stock.StockCommand.OrderProducts;
 
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(MockitoExtension.class)
 class OrderFacadeTest {
 
-    @Mock private UserService userService;
-    @Mock private ProductService productService;
-    @Mock private OrderService orderService;
-    @Mock private BalanceService balanceService;
-    @Mock private StockService stockService;
-    @Mock private PaymentService paymentService;
-    @Mock private UserCouponService userCouponService;
-    @Mock private CouponService couponService;
-    @InjectMocks private OrderFacade orderFacade;
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private ProductService productService;
+
+    @Mock
+    private OrderService orderService;
+
+    @Mock
+    private BalanceService balanceService;
+
+    @Mock
+    private StockService stockService;
+
+    @Mock
+    private PaymentService paymentService;
+
+    @Mock
+    private UserCouponService userCouponService;
+
+    @Mock
+    private CouponService couponService;
+
+    @InjectMocks
+    private OrderFacade orderFacade;
 
     @Test
-    @DisplayName("orderPayment 호출 시 모든 서비스가 순차적으로 호출된다.")
-    void orderPayment() {
+    @DisplayName("주문 결제 - 성공 (쿠폰 없음)")
+    void orderPayment_successWithoutCoupon() {
         // given
+        Long userId = 1L;
+        Long totalPrice = 25000L;
         OrderCriteria.OrderPayment criteria = mock(OrderCriteria.OrderPayment.class);
-        when(criteria.getUserId()).thenReturn(1L);
+        when(criteria.getUserId()).thenReturn(userId);
         when(criteria.getUserCouponId()).thenReturn(null);
-        when(criteria.toProductCommand()).thenReturn(null);
-        when(criteria.toBalanceCommand(anyLong())).thenReturn(null);
-        when(criteria.toStockCommand()).thenReturn(null);
-        when(criteria.toPaymentCommand(any())).thenReturn(null);
 
         ProductInfo.OrderProducts orderProducts = mock(ProductInfo.OrderProducts.class);
         when(productService.getOrderProducts(any())).thenReturn(orderProducts);
 
-        OrderCommand.Create orderCommand = mock(OrderCommand.Create.class);
-        when(criteria.toOrderCommand(orderProducts, null, 0.0)).thenReturn(orderCommand);
-
         OrderInfo.Order order = mock(OrderInfo.Order.class);
-        when(orderService.createOrder(orderCommand)).thenReturn(order);
-        when(order.getTotalPrice()).thenReturn(10000L);
-        when(order.getOrderId()).thenReturn(123L);
+        when(order.getTotalPrice()).thenReturn(totalPrice);
+        when(order.getOrderId()).thenReturn(1L);
+        when(orderService.createOrder(any())).thenReturn(order);
 
         // when
-        orderFacade.orderPayment(criteria);
+        OrderResult.Order result = orderFacade.orderPayment(criteria);
 
         // then
-        verify(userService, times(1)).getUser(1L);
+        assertThat(result).isNotNull();
+        verify(userService, times(1)).getUser(userId);
         verify(productService, times(1)).getOrderProducts(any());
-        verify(orderService, times(1)).createOrder(orderCommand);
+        verify(orderService, times(1)).createOrder(any());
         verify(balanceService, times(1)).useBalance(any());
         verify(stockService, times(1)).deductStock(any());
         verify(paymentService, times(1)).pay(any());
-        verify(orderService, times(1)).paidOrder(123L);
+        verify(orderService, times(1)).paidOrder(1L);
     }
 
     @Test
-    @DisplayName("쿠폰이 있는 주문 결제 시 쿠폰 관련 서비스가 호출된다.")
-    void orderPaymentWithCoupon() {
+    @DisplayName("주문 결제 - 성공 (쿠폰 적용)")
+    void orderPayment_successWithCoupon() {
         // given
+        Long userId = 1L;
+        Long userCouponId = 1L;
+        Long couponId = 1L;
+        Long totalPrice = 25000L;
+        double discountRate = 0.1;
+
         OrderCriteria.OrderPayment criteria = mock(OrderCriteria.OrderPayment.class);
-        when(criteria.getUserId()).thenReturn(1L);
-        when(criteria.getUserCouponId()).thenReturn(1L);
-        when(criteria.toProductCommand()).thenReturn(null);
-        when(criteria.toCouponCommand()).thenReturn(null);
-        when(criteria.toBalanceCommand(anyLong())).thenReturn(null);
-        when(criteria.toStockCommand()).thenReturn(null);
-        when(criteria.toPaymentCommand(any())).thenReturn(null);
+        when(criteria.getUserId()).thenReturn(userId);
+        when(criteria.getUserCouponId()).thenReturn(userCouponId);
 
         ProductInfo.OrderProducts orderProducts = mock(ProductInfo.OrderProducts.class);
         when(productService.getOrderProducts(any())).thenReturn(orderProducts);
 
         UserCouponInfo.UsableCoupon usableCoupon = mock(UserCouponInfo.UsableCoupon.class);
-        when(usableCoupon.getUserCouponId()).thenReturn(1L);
+        when(usableCoupon.getUserCouponId()).thenReturn(userCouponId);
         when(userCouponService.getUsableCoupon(any())).thenReturn(usableCoupon);
 
         CouponInfo.Coupon coupon = mock(CouponInfo.Coupon.class);
-        when(coupon.getDiscountRate()).thenReturn(0.1);
-        when(couponService.getCoupon(1L)).thenReturn(coupon);
-
-        OrderCommand.Create orderCommand = mock(OrderCommand.Create.class);
-        when(criteria.toOrderCommand(orderProducts, 1L, 0.1)).thenReturn(orderCommand);
+        when(coupon.getDiscountRate()).thenReturn(discountRate);
+        when(couponService.getCoupon(couponId)).thenReturn(coupon);
 
         OrderInfo.Order order = mock(OrderInfo.Order.class);
-        when(orderService.createOrder(orderCommand)).thenReturn(order);
-        when(order.getTotalPrice()).thenReturn(9000L);
-        when(order.getOrderId()).thenReturn(123L);
+        when(order.getTotalPrice()).thenReturn(totalPrice);
+        when(order.getOrderId()).thenReturn(1L);
+        when(orderService.createOrder(any())).thenReturn(order);
 
         // when
-        orderFacade.orderPayment(criteria);
+        OrderResult.Order result = orderFacade.orderPayment(criteria);
 
         // then
-        verify(userService, times(1)).getUser(1L);
+        assertThat(result).isNotNull();
+        verify(userService, times(1)).getUser(userId);
         verify(productService, times(1)).getOrderProducts(any());
         verify(userCouponService, times(1)).getUsableCoupon(any());
-        verify(couponService, times(1)).getCoupon(1L);
-        verify(orderService, times(1)).createOrder(orderCommand);
+        verify(couponService, times(1)).getCoupon(couponId);
+        verify(orderService, times(1)).createOrder(any());
         verify(balanceService, times(1)).useBalance(any());
-        verify(userCouponService, times(1)).useUserCoupon(1L);
+        verify(userCouponService, times(1)).useUserCoupon(userCouponId);
         verify(stockService, times(1)).deductStock(any());
         verify(paymentService, times(1)).pay(any());
-        verify(orderService, times(1)).paidOrder(123L);
+        verify(orderService, times(1)).paidOrder(1L);
     }
 
     @Test
-    @DisplayName("결제 실패 시 재고가 복구된다.")
-    void orderPayment_whenPaymentFails_thenStockIsRestored() {
+    @DisplayName("주문 결제 - 결제 실패 시 재고 복구")
+    void orderPayment_paymentFailureRecoverStock() {
         // given
+        Long userId = 1L;
+        Long totalPrice = 25000L;
         OrderCriteria.OrderPayment criteria = mock(OrderCriteria.OrderPayment.class);
-        when(criteria.getUserId()).thenReturn(1L);
+        when(criteria.getUserId()).thenReturn(userId);
         when(criteria.getUserCouponId()).thenReturn(null);
-        when(criteria.toBalanceCommand(anyLong())).thenReturn(null);
 
         ProductInfo.OrderProducts orderProducts = mock(ProductInfo.OrderProducts.class);
         when(productService.getOrderProducts(any())).thenReturn(orderProducts);
 
-        StockCommand.OrderProducts stockCommand = mock(StockCommand.OrderProducts.class);
-        when(criteria.toStockCommand()).thenReturn(stockCommand);
-
         OrderInfo.Order order = mock(OrderInfo.Order.class);
+        when(order.getTotalPrice()).thenReturn(totalPrice);
         when(orderService.createOrder(any())).thenReturn(order);
-        when(order.getTotalPrice()).thenReturn(10000L);
 
-        doThrow(new RuntimeException("결제 실패!")).when(paymentService).pay(any());
+        doThrow(new RuntimeException("결제 실패"))
+            .when(paymentService).pay(any());
 
         // when & then
-        try {
-            orderFacade.orderPayment(criteria);
-        } catch (Exception e) {
-            // then
-            verify(stockService, times(1)).addStock(stockCommand);
-            verify(stockService, times(1)).deductStock(stockCommand);
-            verify(balanceService, times(1)).useBalance(any());
-            verify(paymentService, times(1)).pay(any());
-            verify(orderService, never()).paidOrder(any());
-            return;
-        }
-        fail("예외가 발생해야 합니다.");
+        assertThatThrownBy(() -> orderFacade.orderPayment(criteria))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("결제 실패");
+
+        verify(userService, times(1)).getUser(userId);
+        verify(productService, times(1)).getOrderProducts(any());
+        verify(orderService, times(1)).createOrder(any());
+        verify(balanceService, times(1)).useBalance(any());
+        verify(stockService, times(1)).deductStock(any());
+        verify(paymentService, times(1)).pay(any());
+        verify(stockService, times(1)).addStock(any()); // 재고 복구
+        verify(orderService, never()).paidOrder(any()); // 결제 실패로 paidOrder 호출 안됨
     }
-}
+} 
