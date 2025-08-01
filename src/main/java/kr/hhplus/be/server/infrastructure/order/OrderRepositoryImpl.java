@@ -21,11 +21,17 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public Order findById(Long id) {
         return orderJpaRepository.findById(id)
-            .orElseThrow(() -> new OrderNotFoundException("주문이 존재하지 않습니다. : " + id));
+            .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + id));
     }
 
     @Override
     public List<OrderProduct> findOrderIdsIn(List<Long> orderIds) {
         return orderProductJpaRepository.findByOrderIdIn(orderIds);
+    }
+
+    @Override
+    public void sendOrderMessage(Order order) {
+        // 주문 메시지 전송 로직은 별도 서비스에서 처리
+        // 여기서는 기본 구현만 제공
     }
 } 

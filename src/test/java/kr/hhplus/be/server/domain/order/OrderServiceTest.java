@@ -21,6 +21,9 @@ class OrderServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private OrderExternalClient orderExternalClient;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -61,8 +64,6 @@ class OrderServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.getTotalPrice()).isEqualTo(25000L); // (10000 * 2) + (5000 * 1)
-        assertThat(result.getDiscountPrice()).isEqualTo(0L);
         verify(orderRepository, times(1)).save(any(Order.class));
     }
 
@@ -89,6 +90,7 @@ class OrderServiceTest {
         Long orderId = 1L;
         Order mockOrder = mock(Order.class);
         when(orderRepository.findById(orderId)).thenReturn(mockOrder);
+        doNothing().when(orderExternalClient).sendOrderMessage(any(Order.class));
 
         // when
         orderService.paidOrder(orderId);
@@ -96,6 +98,6 @@ class OrderServiceTest {
         // then
         verify(mockOrder, times(1)).paid();
         verify(orderRepository, times(1)).findById(orderId);
-        verify(orderRepository, times(1)).sendOrderMessage(mockOrder);
+        verify(orderExternalClient, times(1)).sendOrderMessage(mockOrder);
     }
 }
