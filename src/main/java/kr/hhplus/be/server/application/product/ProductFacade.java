@@ -12,6 +12,7 @@ import kr.hhplus.be.server.domain.payment.PaymentInfo;
 import kr.hhplus.be.server.domain.order.OrderInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class ProductFacade {
     private final PaymentService paymentService;
     private final OrderService orderService;
 
+    @Transactional(readOnly = true)
     public ProductResult.Products getProducts() {
         ProductInfo.Products products = productService.getSellingProducts();
         return ProductResult.Products.of(products.getProducts().stream()
@@ -31,6 +33,7 @@ public class ProductFacade {
         .toList());
     }
 
+    @Transactional(readOnly = true)
     public ProductResult.Products getPopularProducts() {
         PaymentInfo.Orders completedOrders = paymentService.getCompletedOrdersBetweenDays(RECENT_DAYS);
 
