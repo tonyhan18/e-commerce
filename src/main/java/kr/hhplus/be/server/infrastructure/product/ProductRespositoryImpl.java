@@ -2,26 +2,29 @@ package kr.hhplus.be.server.infrastructure.product;
 
 import kr.hhplus.be.server.domain.product.*;
 import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class ProductRespositoryImpl implements ProductRespository {
+
+    private final ProductJpaRepository productJpaRepository;
+
+    @Override
+    public Product save(Product product) {
+        return productJpaRepository.save(product);
+    }
+
     @Override
     public Product findById(Long productId) {
-        // TODO: 실제 DB 연동 로직 구현
-        return null;
+        return productJpaRepository.findById(productId)
+            .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + productId));
     }
 
     @Override
     public List<Product> findSellingStatusIn(List<ProductSellingStatus> sellStatuses) {
-        // TODO: 실제 DB 연동 로직 구현
-        return List.of();
-    }
-
-    @Override
-    public List<Product> findByIds(List<Long> productIds) {
-        // TODO: 실제 DB 연동 로직 구현
-        return List.of();
+        return productJpaRepository.findBySellStatusIn(sellStatuses);
     }
 } 
