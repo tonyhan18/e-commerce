@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final OrderExternalClient orderExternalClient;
 
     private OrderProduct createOrderProduct(OrderCommand.OrderProduct command) {
         return OrderProduct.create(
@@ -62,6 +63,6 @@ public class OrderService {
     public void paidOrder(Long orderId) {
         Order order = orderRepository.findById(orderId);
         order.paid();
-        orderRepository.sendOrderMessage(order);
+        orderExternalClient.sendOrderMessage(order);
     }
 }

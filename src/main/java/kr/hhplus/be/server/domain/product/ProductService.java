@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Builder
@@ -31,7 +32,8 @@ public class ProductService {
     }
 
     public ProductInfo.Products getProducts(ProductCommand.Products command) {
-        List<ProductInfo.Product> products = productRepository.findByIds(command.getProductIds()).stream()
+        List<ProductInfo.Product> products = command.getProductIds().stream()
+            .map(productRepository::findById)
             .map(this::toProductInfo)
             .toList();
 

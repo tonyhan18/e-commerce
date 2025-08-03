@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,8 @@ public class OrderFacade {
     private final UserCouponService userCouponService;
     private final CouponService couponService;
 
-    public void orderPayment(OrderCriteria.OrderPayment criteria) {
+    @Transactional
+    public OrderResult.Order orderPayment(OrderCriteria.OrderPayment criteria) {
         userService.getUser(criteria.getUserId());
 
         ProductInfo.OrderProducts orderProducts = productService.getOrderProducts(criteria.toProductCommand());
@@ -63,5 +65,7 @@ public class OrderFacade {
             throw e;
         }
         orderService.paidOrder(order.getOrderId());
+
+        return OrderResult.Order.of(order);
     }
 }

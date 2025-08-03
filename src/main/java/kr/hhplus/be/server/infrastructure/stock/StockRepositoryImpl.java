@@ -1,13 +1,22 @@
 package kr.hhplus.be.server.infrastructure.stock;
 
 import kr.hhplus.be.server.domain.stock.*;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
-@Repository
+@Component
+@RequiredArgsConstructor
 public class StockRepositoryImpl implements StockRepository {
+
+    private final StockJpaRepository stockJpaRepository;
+
+    @Override
+    public Stock save(Stock stock) {
+        return stockJpaRepository.save(stock);
+    }
+
     @Override
     public Stock findByProductId(Long productId) {
-        // TODO: 실제 DB 연동 로직 구현
-        return null;
+        return stockJpaRepository.findByProductId(productId);
     }
 } 

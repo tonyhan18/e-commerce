@@ -2,21 +2,23 @@ package kr.hhplus.be.server.infrastructure.balance;
 
 import kr.hhplus.be.server.domain.balance.Balance;
 import kr.hhplus.be.server.domain.balance.BalanceRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
-@Repository
+@Component
+@RequiredArgsConstructor
 public class BalanceRepositoryImpl implements BalanceRepository {
+    private final BalanceJpaRepository balanceJpaRepository;
+
     @Override
     public Optional<Balance> findOptionalByUserId(Long userId) {
-        // TODO: 실제 DB 연동 로직 구현
-        return Optional.empty();
+        return balanceJpaRepository.findOptionalByUserId(userId);
     }
 
     @Override
     public Balance save(Balance balance) {
-        // TODO: 실제 DB 연동 로직 구현
-        return balance;
+        return balanceJpaRepository.save(balance);
     }
 } 
