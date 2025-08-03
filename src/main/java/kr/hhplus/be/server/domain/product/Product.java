@@ -12,7 +12,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Table(name = "product")
+@Table(name = "product", indexes = {
+    @Index(name = "idx_product_status", columnList = "sellStatus"),
+    @Index(name = "idx_product_price", columnList = "price"),
+    @Index(name = "idx_product_status_price", columnList = "sellStatus,price")
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Product {
     

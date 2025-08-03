@@ -16,7 +16,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "orders")
+@Table(name = "orders", indexes = {
+    @Index(name = "idx_orders_user_id", columnList = "user_id"),
+    @Index(name = "idx_orders_total_price", columnList = "totalPrice"),
+    @Index(name = "idx_orders_status", columnList = "orderStatus"),
+    @Index(name = "idx_orders_user_status", columnList = "user_id,orderStatus")
+})
 public class Order {
     @Id
     @Column(name = "order_id")
