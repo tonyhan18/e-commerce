@@ -1,91 +1,206 @@
 package kr.hhplus.be.server.domain.balance;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+import kr.hhplus.be.server.support.MockTestSupport;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class BalanceServiceTest {
-    private BalanceRepository balanceRepository;
+class BalanceServiceTest extends MockTestSupport{
+    @InjectMocks
     private BalanceService balanceService;
 
-    @BeforeEach
-    void setUp() {
-        balanceRepository = mock(BalanceRepository.class);
-        balanceService = new BalanceService(balanceRepository);
+    @Mock
+    private BalanceRepository balanceRepository;
+
+    @DisplayName("잔고 충전 시, 충전 금액은 0보다 커야 한다.")
+    @Test
+    void chargeShouldPositiveAmount() {
+        // given
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(1L, 0L);
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
+
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.chargeBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("충전 금액은 0보다 커야 합니다.");
     }
 
+    @DisplayName("잔고 충전 시, 최대 금액을 넘을 수 없다.")
     @Test
-    @DisplayName("getBalance - 잔액이 존재하는 경우")
-    void getBalance_exists() {
-        Balance balance = Balance.create(1L, 5000L);
-        when(balanceRepository.findOptionalByUserId(1L)).thenReturn(Optional.of(balance));
+    void chargeCannotExceedMaxAmount() {
+        // given
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(1L, 1L);
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000_000L)
+            .build();
 
-        BalanceInfo.Balance result = balanceService.getBalance(1L);
-        assertThat(result.getBalance()).isEqualTo(5000L);
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.chargeBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("최대 금액을 초과할 수 없습니다.");
     }
 
+    @DisplayName("잔고가 없으면, 잔고를 생성한다.")
     @Test
-    @DisplayName("getBalance - 잔액이 없는 경우 0 반환")
-    void getBalance_notExists() {
-        when(balanceRepository.findOptionalByUserId(2L)).thenReturn(Optional.empty());
+    void chargeBalanceIfNotExist() {
+        // given
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(1L, 10_000L);
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
 
-        BalanceInfo.Balance result = balanceService.getBalance(2L);
-        assertThat(result.getBalance()).isEqualTo(0L);
-    }
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("chargeBalance - 기존 잔액이 있을 때 충전")
-    void chargeBalance_exists() {
-        Balance balance = spy(Balance.create(1L, 1000L));
-        BalanceCommand.Charge command = BalanceCommand.Charge.of(1L, 500L);
-        when(balanceRepository.findOptionalByUserId(1L)).thenReturn(Optional.of(balance));
+        when(balanceRepository.save(any(Balance.class)))
+            .thenReturn(balance);
 
+        // when
         balanceService.chargeBalance(command);
-        verify(balance).charge(500L);
-        verify(balanceRepository, never()).save(any());
+
+        // then
+        verify(balanceRepository, times(1)).save(any(Balance.class));
     }
 
+    @DisplayName("잔고가 있으면, 잔고를 충전한다.")
     @Test
-    @DisplayName("chargeBalance - 기존 잔액이 없을 때 새로 생성")
-    void chargeBalance_notExists() {
-        BalanceCommand.Charge command = BalanceCommand.Charge.of(2L, 1000L);
-        when(balanceRepository.findOptionalByUserId(2L)).thenReturn(Optional.empty());
+    void chargeBalanceIfExist() {
+        // given
+        BalanceCommand.Charge command = mock(BalanceCommand.Charge.class);
+        Balance balance = mock(Balance.class);
 
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when
         balanceService.chargeBalance(command);
-        ArgumentCaptor<Balance> captor = ArgumentCaptor.forClass(Balance.class);
-        verify(balanceRepository).save(captor.capture());
-        assertThat(captor.getValue().getUserId()).isEqualTo(2L);
-        assertThat(captor.getValue().getBalance()).isEqualTo(1000L);
+
+        // then
+        verify(balance, times(1)).charge(command.getAmount());
+        verify(balanceRepository, times(0)).save(any(Balance.class));
     }
 
+    @DisplayName("잔고가 없으면, 잔고를 차감하지 못한다.")
     @Test
-    @DisplayName("useBalance - 기존 잔액이 있을 때 사용")
-    void useBalance_exists() {
-        Balance balance = spy(Balance.create(1L, 2000L));
-        BalanceCommand.Use command = BalanceCommand.Use.of(1L, 500L);
-        when(balanceRepository.findOptionalByUserId(1L)).thenReturn(Optional.of(balance));
+    void useBalanceIfNotExist() {
+        // given
+        BalanceCommand.Use command = BalanceCommand.Use.of(1L, 10_000L);
 
-        balanceService.useBalance(command);
-        verify(balance).use(500L);
-        verify(balanceRepository, never()).save(any());
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.useBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("잔고가 존재하지 않습니다.");
     }
 
+    @DisplayName("사용 금액이 0이면 잔고를 차감하지 못한다.")
     @Test
-    @DisplayName("useBalance - 기존 잔액이 없을 때 새로 생성")
-    void useBalance_notExists() {
-        BalanceCommand.Use command = BalanceCommand.Use.of(3L, 700L);
-        when(balanceRepository.findOptionalByUserId(3L)).thenReturn(Optional.empty());
+    void useBalanceWithZeroAmount() {
+        // given
+        BalanceCommand.Use command = BalanceCommand.Use.of(1L, 0L);
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
 
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.useBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("사용 금액은 0보다 커야 합니다.");
+    }
+
+    @DisplayName("잔고가 부족하면, 잔고를 차감하지 못한다.")
+    @Test
+    void useBalanceWithInsufficientBalance() {
+        // given
+        BalanceCommand.Use command = BalanceCommand.Use.of(1L, 10_001L);
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
+
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.useBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("잔액이 부족합니다.");
+    }
+
+    @DisplayName("잔고를 차감한다.")
+    @Test
+    void useBalance() {
+        // given
+        BalanceCommand.Use command = BalanceCommand.Use.of(1L, 10_000L);
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
+
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when
         balanceService.useBalance(command);
-        ArgumentCaptor<Balance> captor = ArgumentCaptor.forClass(Balance.class);
-        verify(balanceRepository).save(captor.capture());
-        assertThat(captor.getValue().getUserId()).isEqualTo(3L);
-        assertThat(captor.getValue().getBalance()).isEqualTo(700L);
+
+        // then
+        assertThat(balance.getBalance()).isZero();
+    }
+
+    @DisplayName("잔고가 없으면 0을 반환한다.")
+    @Test
+    void getBalanceWithNotExist() {
+        // given
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.empty());
+
+        // when
+        BalanceInfo.Balance balanceInfo = balanceService.getBalance(1L);
+
+        // then
+        assertThat(balanceInfo.getBalance()).isZero();
+    }
+
+    @DisplayName("잔고를 조회한다.")
+    @Test
+    void getBalance() {
+        // given
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
+
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when
+        BalanceInfo.Balance balanceInfo = balanceService.getBalance(1L);
+
+        // then
+        assertThat(balanceInfo.getBalance()).isEqualTo(10_000L);
     }
 } 
