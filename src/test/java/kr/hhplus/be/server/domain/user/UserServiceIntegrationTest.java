@@ -1,65 +1,47 @@
 package kr.hhplus.be.server.domain.user;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.support.IntegrationTestSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-class UserServiceIntegrationTest {
-
-    @Mock
-    private UserRepository userRepository;
-
-    @InjectMocks
+@Transactional
+class UserServiceIntegrationTest extends IntegrationTestSupport{
+    @Autowired
     private UserService userService;
 
-    private User testUser;
+    @Autowired
+    private UserRepository userRepository;
 
-    @BeforeEach
-    void setUp() {
-        testUser = User.builder()
-            .id(1L)
-            .username("테스트 사용자")
-            .build();
-    }
-
+    @DisplayName("사용자 조회 시, 사용자 정보가 존재해야 한다.")
     @Test
-    @DisplayName("사용자 조회 - 성공")
-    void getUser_success() {
+    void getUserWithEmptyUser() {
         // given
         Long userId = 1L;
-        when(userRepository.findById(userId)).thenReturn(testUser);
-
-        // when
-        UserInfo.User result = userService.getUser(userId);
-
-        // then
-        assertThat(result).isNotNull();
-        assertThat(result.getUserId()).isEqualTo(1L);
-        assertThat(result.getUsername()).isEqualTo("테스트 사용자");
-        verify(userRepository, times(1)).findById(userId);
-    }
-
-    @Test
-    @DisplayName("사용자 조회 - 존재하지 않는 사용자")
-    void getUser_notFound() {
-        // given
-        Long userId = 999L;
-        when(userRepository.findById(userId))
-            .thenThrow(new IllegalArgumentException("User not found with id: 999"));
 
         // when & then
         assertThatThrownBy(() -> userService.getUser(userId))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("User not found with id: 999");
-        verify(userRepository, times(1)).findById(userId);
+            .hasMessage("사용자를 찾을 수 없습니다.");
+    }
+
+    @DisplayName("사용자를 조회한다.")
+    @Test
+    void getUser() {
+        // given
+        User user = User.create("항플");
+        userRepository.save(user);
+
+        // when
+        UserInfo.User result = userService.getUser(user.getId());
+
+        // then
+        assertThat(result.getUserId()).isEqualTo(user.getId());
+        assertThat(result.getUsername()).isEqualTo(user.getUsername());
     }
 } 

@@ -2,20 +2,25 @@ package kr.hhplus.be.server.domain.product;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "product", indexes = {
-    @Index(name = "idx_product_status", columnList = "sellStatus"),
+    @Index(name = "idx_product_status", columnList = "status"),
     @Index(name = "idx_product_price", columnList = "price"),
-    @Index(name = "idx_product_status_price", columnList = "sellStatus,price")
+    @Index(name = "idx_product_status_price", columnList = "status,price")
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Product {
@@ -43,13 +48,7 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Builder
-    private Product(Long id, String name, long price, ProductSellingStatus sellStatus) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.sellStatus = sellStatus;
-    }
+
 
     public static Product create(String name, long price, ProductSellingStatus sellStatus) {
         validateName(name);

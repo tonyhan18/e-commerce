@@ -7,77 +7,92 @@ import static org.assertj.core.api.Assertions.*;
 
 class BalanceTest {
 
+    @DisplayName("충전 금액은 0보다 커야한다.")
     @Test
-    @DisplayName("잔액 객체 생성 - 정상")
-    void createBalance_success() {
-        Balance balance = Balance.create(1L, 1000L);
-        assertThat(balance.getUserId()).isEqualTo(1L);
-        assertThat(balance.getBalance()).isEqualTo(1000L);
-    }
+    void chargeWithNotPositiveAmount() {
+        // given
+        Balance balance = Balance.create(1L);
 
-    @Test
-    @DisplayName("잔액 객체 생성 - 음수 잔액 예외")
-    void createBalance_negativeBalance() {
-        assertThatThrownBy(() -> Balance.create(1L, -100L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("잔액은 0원 이상이어야 합니다.");
-    }
-
-    @Test
-    @DisplayName("잔액 충전 - 정상")
-    void charge_success() {
-        Balance balance = Balance.create(1L, 1000L);
-        balance.charge(500L);
-        assertThat(balance.getBalance()).isEqualTo(1500L);
-    }
-
-    @Test
-    @DisplayName("잔액 충전 - 0 이하 금액 예외")
-    void charge_zeroOrNegative() {
-        Balance balance = Balance.create(1L, 1000L);
+        // when & then
         assertThatThrownBy(() -> balance.charge(0L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("충전 금액은 0원 이상이어야 합니다.");
-        assertThatThrownBy(() -> balance.charge(-100L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("충전 금액은 0원 이상이어야 합니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("충전 금액은 0보다 커야 합니다.");
     }
 
+    @DisplayName("충전 최대 금액을 넘을 수 없다.")
     @Test
-    @DisplayName("잔액 충전 - 최대 잔액 초과 예외")
-    void charge_exceedMaxBalance() {
-        Balance balance = Balance.create(1L, 9_999_900L);
-        assertThatThrownBy(() -> balance.charge(200L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("최대 잔액 초과");
+    void chargeCannotExceedMaxAmount() {
+        // given
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000_000L)
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> balance.charge(1L))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("최대 금액을 초과할 수 없습니다.");
     }
 
+    @DisplayName("잔액을 충전한다.")
     @Test
-    @DisplayName("잔액 사용 - 정상")
-    void use_success() {
-        Balance balance = Balance.create(1L, 1000L);
-        balance.use(500L);
-        assertThat(balance.getBalance()).isEqualTo(500L);
+    void charge() {
+        // given
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(1_000_000L)
+            .build();
+
+        // when
+        balance.charge(1_000_000L);
+
+        // then
+        assertThat(balance.getBalance()).isEqualTo(2_000_000L);
     }
 
+    @DisplayName("사용 금액은 0보다 커야한다.")
     @Test
-    @DisplayName("잔액 사용 - 0 이하 금액 예외")
-    void use_zeroOrNegative() {
-        Balance balance = Balance.create(1L, 1000L);
+    void useWithNotPositiveAmount() {
+        // given
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(1_000_000L)
+            .build();
+
+        // when & then
         assertThatThrownBy(() -> balance.use(0L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("사용 금액은 0원 이상이어야 합니다.");
-        assertThatThrownBy(() -> balance.use(-100L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("사용 금액은 0원 이상이어야 합니다.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("사용 금액은 0보다 커야 합니다.");
     }
 
+    @DisplayName("잔고가 부족할 경우 차감할 수 없다.")
     @Test
-    @DisplayName("잔액 사용 - 잔액 부족 예외")
-    void use_insufficientBalance() {
-        Balance balance = Balance.create(1L, 1000L);
-        assertThatThrownBy(() -> balance.use(2000L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("잔액 부족");
+    void useCannotInsufficientAmount() {
+        // given
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(1_000_000L)
+            .build();
+
+        // when & then
+        assertThatThrownBy(() -> balance.use(1_000_001L))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("잔액이 부족합니다.");
+    }
+
+    @DisplayName("잔고를 차감한다.")
+    @Test
+    void use() {
+        // given
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(1_000_000L)
+            .build();
+
+        // when
+        balance.use(1_000_000L);
+
+        // then
+        assertThat(balance.getBalance()).isZero();
     }
 } 

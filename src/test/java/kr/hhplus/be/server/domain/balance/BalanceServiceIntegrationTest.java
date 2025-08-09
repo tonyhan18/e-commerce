@@ -1,148 +1,238 @@
 package kr.hhplus.be.server.domain.balance;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Optional;
+import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.infrastructure.balance.BalanceTransactionalJpaRepository;
+import kr.hhplus.be.server.support.IntegrationTestSupport;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import java.util.List;
 
-@ExtendWith(MockitoExtension.class)
-class BalanceServiceIntegrationTest {
+import static org.assertj.core.api.Assertions.*;
 
-    @Mock
-    private BalanceRepository balanceRepository;
+@Transactional
+class BalanceServiceIntegrationTest extends IntegrationTestSupport{
 
-    @InjectMocks
+    @Autowired
     private BalanceService balanceService;
 
-    private Balance testBalance;
+    @Autowired
+    private BalanceRepository balanceRepository;
 
-    @BeforeEach
-    void setUp() {
-        testBalance = Balance.create(1L, 1000L);
-    }
+    @Autowired
+    private BalanceTransactionalJpaRepository balanceTransactionalJpaRepository;
 
+    @DisplayName("잔고 충전 시, 잔고가 존재하면 충전 금액을 추가한다.")
     @Test
-    @DisplayName("잔액 조회 - 기존 잔액이 있는 경우")
-    void getBalance_existingBalance() {
+    void chargeBalanceWhenBalanceExists() {
         // given
         Long userId = 1L;
-        when(balanceRepository.findOptionalByUserId(userId))
-                .thenReturn(Optional.of(testBalance));
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(10_000L)
+            .build();
+        balanceRepository.save(existingBalance);
 
-        // when
-        BalanceInfo.Balance result = balanceService.getBalance(userId);
-
-        // then
-        assertThat(result.getBalance()).isEqualTo(1000L);
-        verify(balanceRepository, times(1)).findOptionalByUserId(userId);
-    }
-
-    @Test
-    @DisplayName("잔액 조회 - 잔액이 없는 경우")
-    void getBalance_noBalance() {
-        // given
-        Long userId = 999L;
-        when(balanceRepository.findOptionalByUserId(userId))
-                .thenReturn(Optional.empty());
-
-        // when
-        BalanceInfo.Balance result = balanceService.getBalance(userId);
-
-        // then
-        assertThat(result.getBalance()).isEqualTo(0L);
-        verify(balanceRepository, times(1)).findOptionalByUserId(userId);
-    }
-
-    @Test
-    @DisplayName("잔액 충전 - 기존 잔액이 있는 경우")
-    void chargeBalance_existingBalance() {
-        // given
-        Long userId = 1L;
-        Long chargeAmount = 500L;
-        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, chargeAmount);
-        
-        when(balanceRepository.findOptionalByUserId(userId))
-                .thenReturn(Optional.of(testBalance));
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, 5_000L);
 
         // when
         balanceService.chargeBalance(command);
 
         // then
-        assertThat(testBalance.getBalance()).isEqualTo(1500L);
-        verify(balanceRepository, times(1)).findOptionalByUserId(userId);
-        // 기존 잔액이 있을 때는 save가 호출되지 않음 (JPA의 dirty checking 때문)
-        verify(balanceRepository, never()).save(any(Balance.class));
+        Balance updatedBalance = balanceRepository.findOptionalByUserId(userId).orElseThrow();
+        assertThat(updatedBalance.getBalance()).isEqualTo(15_000L);
     }
 
+    @DisplayName("잔고 충전 시, 잔고가 존재할 때 충전 금액이 양수이어야 한다.")
     @Test
-    @DisplayName("잔액 충전 - 새로운 사용자의 경우")
-    void chargeBalance_newUser() {
+    void chargeBalanceWhenAmountIsNotPositive() {
         // given
-        Long userId = 2L;
-        Long chargeAmount = 2000L;
-        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, chargeAmount);
-        
-        when(balanceRepository.findOptionalByUserId(userId))
-                .thenReturn(Optional.empty());
-        when(balanceRepository.save(any(Balance.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        Long userId = 1L;
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(10_000L)
+            .build();
+        balanceRepository.save(existingBalance);
+
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, -5_000L);
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.chargeBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("충전 금액은 0보다 커야 합니다.");
+    }
+
+    @DisplayName("잔고 충전 시, 최대 금액을 초과하면 예외를 발생시킨다.")
+    @Test
+    void chargeBalanceWhenExceedsMaxAmount() {
+        // given
+        Long userId = 1L;
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(10_000_000L)
+            .build();
+        balanceRepository.save(existingBalance);
+
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, 1L);
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.chargeBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("최대 금액을 초과할 수 없습니다.");
+    }
+
+    @DisplayName("잔고 충전 시, 잔고가 없으면 새 잔고를 생성한다.")
+    @Test
+    void chargeBalanceWhenBalanceDoesNotExist() {
+        // given
+        Long userId = 1L;
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, 5_000L);
 
         // when
         balanceService.chargeBalance(command);
 
         // then
-        verify(balanceRepository, times(1)).findOptionalByUserId(userId);
-        verify(balanceRepository, times(1)).save(any(Balance.class));
+        Balance newBalance = balanceRepository.findOptionalByUserId(userId).orElseThrow();
+        assertThat(newBalance.getBalance()).isEqualTo(5_000L);
     }
 
+    @DisplayName("잔고 생성 시, 최대 금액을 초과하면 예외를 발생시킨다.")
     @Test
-    @DisplayName("잔액 사용 - 기존 잔액이 있는 경우")
-    void useBalance_existingBalance() {
+    void createBalanceWhenExceedsMaxAmount() {
         // given
         Long userId = 1L;
-        Long useAmount = 300L;
-        BalanceCommand.Use command = BalanceCommand.Use.of(userId, useAmount);
-        
-        when(balanceRepository.findOptionalByUserId(userId))
-                .thenReturn(Optional.of(testBalance));
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, 10_000_001L);
 
-        // when
-        balanceService.useBalance(command);
-
-        // then
-        assertThat(testBalance.getBalance()).isEqualTo(700L);
-        verify(balanceRepository, times(1)).findOptionalByUserId(userId);
-        // 기존 잔액이 있을 때는 save가 호출되지 않음 (JPA의 dirty checking 때문)
-        verify(balanceRepository, never()).save(any(Balance.class));
+        // when & then
+        assertThatThrownBy(() -> balanceService.chargeBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("최대 금액을 초과할 수 없습니다.");
     }
 
+    @DisplayName("잔고 사용 시, 잔고가 존재하면 사용 금액을 차감한다.")
     @Test
-    @DisplayName("잔액 사용 - 새로운 사용자의 경우")
-    void useBalance_newUser() {
+    void useBalanceWhenBalanceExists() {
         // given
-        Long userId = 3L;
-        Long useAmount = 1000L;
-        BalanceCommand.Use command = BalanceCommand.Use.of(userId, useAmount);
-        
-        when(balanceRepository.findOptionalByUserId(userId))
-                .thenReturn(Optional.empty());
-        when(balanceRepository.save(any(Balance.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        Long userId = 1L;
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(10_000L)
+            .build();
+        balanceRepository.save(existingBalance);
+
+        BalanceCommand.Use command = BalanceCommand.Use.of(userId, 5_000L);
 
         // when
         balanceService.useBalance(command);
 
         // then
-        verify(balanceRepository, times(1)).findOptionalByUserId(userId);
-        verify(balanceRepository, times(1)).save(any(Balance.class));
+        Balance updatedBalance = balanceRepository.findOptionalByUserId(userId).orElseThrow();
+        assertThat(updatedBalance.getBalance()).isEqualTo(5_000L);
+    }
+
+    @DisplayName("잔고 사용 시, 잔고가 없으면 예외를 발생시킨다.")
+    @Test
+    void useBalanceWhenBalanceDoseNotExist() {
+        // given
+        Long userId = 1L;
+        BalanceCommand.Use command = BalanceCommand.Use.of(userId, 5_000L);
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.useBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("잔고가 존재하지 않습니다.");
+    }
+
+    @DisplayName("잔고 사용 시, 사용 금액은 양수여야 한다.")
+    @Test
+    void useBalanceWhenAmountIsNotPositive() {
+        // given
+        Long userId = 1L;
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(10_000L)
+            .build();
+        balanceRepository.save(existingBalance);
+
+        BalanceCommand.Use command = BalanceCommand.Use.of(userId, -5_000L);
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.useBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("사용 금액은 0보다 커야 합니다.");
+    }
+
+    @DisplayName("잔고 사용 시, 잔고 금액은 충분해야한다.")
+    @Test
+    void useBalanceWhenInsufficientBalance() {
+        // given
+        Long userId = 1L;
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(5_000L)
+            .build();
+        balanceRepository.save(existingBalance);
+
+        BalanceCommand.Use command = BalanceCommand.Use.of(userId, 5_001L);
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.useBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("잔액이 부족합니다.");
+    }
+
+    @DisplayName("잔고 충전 & 사용 시, 트랜잭션 내역을 저장한다.")
+    @Test
+    void saveBalanceTransactionAfterChargeBalanceAndUseBalance() {
+        // given
+        Long userId = 1L;
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, 5_000L);
+        BalanceCommand.Use useCommand = BalanceCommand.Use.of(userId, 2_000L);
+
+        // when
+        balanceService.chargeBalance(command);
+        balanceService.useBalance(useCommand);
+
+        // then
+        List<BalanceTransaction> transactions = balanceTransactionalJpaRepository.findAll();
+        assertThat(transactions).hasSize(2)
+            .extracting("amount", "transactionType")
+            .containsExactly(
+                tuple(5_000L, BalanceTransactionType.CHARGE),
+                tuple(-2_000L, BalanceTransactionType.USE)
+            );
+    }
+
+    @DisplayName("잔고 조회 시, 잔고가 존재하면 잔고 정보를 반환한다.")
+    @Test
+    void getBalanceWhenBalanceExists() {
+        // given
+        Long userId = 1L;
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(10_000L)
+            .build();
+        balanceRepository.save(existingBalance);
+
+        // when
+        BalanceInfo.Balance balance = balanceService.getBalance(userId);
+
+        // then
+        assertThat(balance.getBalance()).isEqualTo(10_000L);
+    }
+
+    @DisplayName("잔고 조회 시, 잔고가 없으면 빈 잔고 정보를 반환한다.")
+    @Test
+    void getBalanceWhenBalanceDoseNotExist() {
+        // given
+        Long userId = 1L;
+
+        // when
+        BalanceInfo.Balance balance = balanceService.getBalance(userId);
+
+        // then
+        assertThat(balance.getBalance()).isZero();
     }
 }

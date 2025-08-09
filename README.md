@@ -25,6 +25,12 @@
 + [🔍 Entity 인덱스 최적화 가이드](ENTITY_INDEX_OPTIMIZATION.md)
 + [⚡ 동시성 테스트 가이드](CONCURRENCY_TEST_GUIDE.md)
 
+### 🔐 동시성 제어 보고서
+
++ [📋 동시성 제어 보고서 개요](docs/report/README.md)
++ [📖 상세 기술 보고서](docs/report/concurrency-control-report.md)
++ [📊 요약 보고서](docs/report/concurrency-summary.md)
+
 ### 🧪 테스트 및 초기화 스크립트
 
 + [📝 초기 데이터 생성 스크립트](init-scripts/README.md)

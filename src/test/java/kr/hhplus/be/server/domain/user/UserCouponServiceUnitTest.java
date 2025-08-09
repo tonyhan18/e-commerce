@@ -10,14 +10,11 @@ import java.util.List;
 import java.util.Optional;
 
 import kr.hhplus.be.server.support.MockTestSupport;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class UserCouponServiceIntegrationTest extends MockTestSupport{
-
+public class UserCouponServiceUnitTest extends MockTestSupport{
     @InjectMocks
     private UserCouponService userCouponService;
 
@@ -185,4 +182,4 @@ class UserCouponServiceIntegrationTest extends MockTestSupport{
             .extracting("userCouponId")
             .containsExactlyInAnyOrder(1L, 2L);
     }
-} 
+}

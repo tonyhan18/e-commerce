@@ -2,6 +2,7 @@ package kr.hhplus.be.server.domain.user;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,12 +11,20 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "user_coupon", indexes = {
-    @Index(name = "idx_user_coupon_user_id", columnList = "userId"),
-    @Index(name = "idx_user_coupon_status", columnList = "usedStatus"),
-    @Index(name = "idx_user_coupon_user_status", columnList = "userId,usedStatus")
-})
+@Table(
+    name = "user_coupon", 
+    indexes = {
+        @Index(name = "idx_user_coupon_user_id", columnList = "userId"),
+        @Index(name = "idx_user_coupon_status", columnList = "usedStatus"),
+        @Index(name = "idx_user_coupon_user_status", columnList = "userId,usedStatus")
+    },
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_user_coupon_user_id_coupon_id", columnNames = {"userId", "couponId"})
+    }
+)
 public class UserCoupon {
 
     @Id
@@ -30,15 +39,7 @@ public class UserCoupon {
     private LocalDateTime issuedAt;
     private LocalDateTime usedAt;
 
-    @Builder
-    private UserCoupon(Long id, Long userId, Long couponId, UserCouponUsedStatus usedStatus, LocalDateTime issuedAt, LocalDateTime usedAt) {
-        this.id = id;
-        this.userId = userId;
-        this.couponId = couponId;
-        this.usedStatus = usedStatus;
-        this.issuedAt = issuedAt;
-        this.usedAt = usedAt;
-    }
+
 
     public static UserCoupon create(Long userId, Long couponId) {
         return UserCoupon.builder()

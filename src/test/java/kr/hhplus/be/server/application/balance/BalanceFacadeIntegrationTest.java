@@ -1,99 +1,66 @@
 package kr.hhplus.be.server.application.balance;
 
-import kr.hhplus.be.server.domain.balance.BalanceInfo;
-import kr.hhplus.be.server.domain.balance.BalanceService;
-import kr.hhplus.be.server.domain.user.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import kr.hhplus.be.server.domain.balance.Balance;
+import kr.hhplus.be.server.domain.balance.BalanceRepository;
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.support.IntegrationTestSupport;
 
-@ExtendWith(MockitoExtension.class)
-class BalanceFacadeIntegrationTest {
+import static org.assertj.core.api.Assertions.*;
 
-    @Mock
-    private UserService userService;
-
-    @Mock
-    private BalanceService balanceService;
-
-    @InjectMocks
+class BalanceFacadeIntegrationTest extends IntegrationTestSupport{
+    @Autowired
     private BalanceFacade balanceFacade;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BalanceRepository balanceRepository;
+
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        user = User.create("항플");
+        userRepository.save(user);
+
+        Balance balance = Balance.builder()
+            .userId(user.getId())
+            .balance(100_000L)
+            .build();
+        balanceRepository.save(balance);
+    }
+
+    @DisplayName("잔액을 충전한다.")
     @Test
-    @DisplayName("잔액 충전 - 성공")
-    void chargeBalance_success() {
+    void chargeBalance() {
         // given
-        Long userId = 1L;
-        Long amount = 10000L;
-        BalanceCriteria.Charge criteria = BalanceCriteria.Charge.of(userId, amount);
+        BalanceCriteria.Charge criteria = BalanceCriteria.Charge.of(user.getId(), 10_000L);
 
         // when
         balanceFacade.chargeBalance(criteria);
 
         // then
-        verify(userService, times(1)).getUser(userId);
-        verify(balanceService, times(1)).chargeBalance(any());
+        Balance balance = balanceRepository.findOptionalByUserId(user.getId()).orElseThrow();
+        assertThat(balance.getBalance()).isEqualTo(110_000L);
     }
 
+    @DisplayName("잔액을 조회한다.")
     @Test
-    @DisplayName("잔액 충전 - 사용자 없음")
-    void chargeBalance_userNotFound() {
+    void getBalance() {
         // given
-        Long userId = 999L;
-        Long amount = 10000L;
-        BalanceCriteria.Charge criteria = BalanceCriteria.Charge.of(userId, amount);
-        doThrow(new IllegalArgumentException("User not found"))
-            .when(userService).getUser(userId);
-
-        // when & then
-        assertThatThrownBy(() -> balanceFacade.chargeBalance(criteria))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("User not found");
-        verify(userService, times(1)).getUser(userId);
-        verify(balanceService, never()).chargeBalance(any());
-    }
-
-    @Test
-    @DisplayName("잔액 조회 - 성공")
-    void getBalance_success() {
-        // given
-        Long userId = 1L;
-        Long balanceAmount = 50000L;
-        BalanceInfo.Balance mockBalance = mock(BalanceInfo.Balance.class);
-        when(mockBalance.getBalance()).thenReturn(balanceAmount);
-        when(balanceService.getBalance(userId)).thenReturn(mockBalance);
+        Long userId = user.getId();
 
         // when
-        BalanceResult.Balance result = balanceFacade.getBalance(userId);
+        BalanceResult.Balance balance = balanceFacade.getBalance(userId);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.getBalance()).isEqualTo(balanceAmount);
-        verify(userService, times(1)).getUser(userId);
-        verify(balanceService, times(1)).getBalance(userId);
-    }
-
-    @Test
-    @DisplayName("잔액 조회 - 사용자 없음")
-    void getBalance_userNotFound() {
-        // given
-        Long userId = 999L;
-        doThrow(new IllegalArgumentException("User not found"))
-            .when(userService).getUser(userId);
-
-        // when & then
-        assertThatThrownBy(() -> balanceFacade.getBalance(userId))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("User not found");
-        verify(userService, times(1)).getUser(userId);
-        verify(balanceService, never()).getBalance(any());
+        assertThat(balance.getBalance()).isEqualTo(100_000L);
     }
 } 
