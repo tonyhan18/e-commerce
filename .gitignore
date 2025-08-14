@@ -38,3 +38,5 @@ out/
 data
 
 *.log
+
+/src/main/generated/

@@ -68,6 +68,20 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 }
 
+val querydslDir = "$buildDir/generated/querydsl"
+
+sourceSets {
+	main {
+		java {
+			srcDir(querydslDir)
+		}
+	}
+}
+
+tasks.withType<JavaCompile>() {
+	options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
+}
+
 dockerCompose {
     useComposeFiles = listOf("docker-compose.yml")
     waitForTcpPorts = true
