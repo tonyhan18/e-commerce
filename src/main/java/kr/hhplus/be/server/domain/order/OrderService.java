@@ -22,9 +22,9 @@ public class OrderService {
 
         Order order = Order.create(
             command.getUserId(), 
-            orderProducts,
             command.getUserCouponId(),
-            command.getDiscountRate()
+            command.getDiscountRate(),
+            orderProducts
         );
         orderRepository.save(order);
 
@@ -38,8 +38,7 @@ public class OrderService {
     }
 
     public OrderInfo.PaidProducts getPaidProducts(OrderCommand.PaidProducts command) {
-        OrderCommand.PaidProducts queryCommand = command.toPaidProductsQuery(OrderStatus.PAID);
-        List<OrderInfo.PaidProduct> paidProducts = orderRepository.findPaidProducts(queryCommand);
+        List<OrderInfo.PaidProduct> paidProducts = orderRepository.findPaidProducts(command);
         return OrderInfo.PaidProducts.of(paidProducts);
     }
 

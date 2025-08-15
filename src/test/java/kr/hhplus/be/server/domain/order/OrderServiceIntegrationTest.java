@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 @Transactional
 class OrderServiceIntegrationTest extends IntegrationTestSupport{
@@ -26,10 +27,10 @@ class OrderServiceIntegrationTest extends IntegrationTestSupport{
     @Test
     void createOrder() {
         // given
-        OrderCommand.Create command = OrderCommand.Create.of(1L, 1L, 0.1, List.of(
+        OrderCommand.Create command = OrderCommand.Create.of(1L, List.of(
             OrderCommand.OrderProduct.of(1L, "상품1", 10_000L, 2),
             OrderCommand.OrderProduct.of(2L, "상품2", 20_000L, 3)
-        ));
+        ), 1L, 0.1);
 
         // when
         OrderInfo.Order order = orderService.createOrder(command);
@@ -81,7 +82,7 @@ class OrderServiceIntegrationTest extends IntegrationTestSupport{
                 orderRepository.save(order);
             });
 
-        OrderCommand.DateQuery command = OrderCommand.DateQuery.of(LocalDate.of(2025, 4, 23));
+        OrderCommand.PaidProducts command = OrderCommand.PaidProducts.of(LocalDate.of(2025, 4, 23), OrderStatus.PAID);
 
         // when
         OrderInfo.PaidProducts result = orderService.getPaidProducts(command);

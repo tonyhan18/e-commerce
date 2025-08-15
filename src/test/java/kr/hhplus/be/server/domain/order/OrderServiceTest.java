@@ -1,18 +1,17 @@
 package kr.hhplus.be.server.domain.order;
 
+import kr.hhplus.be.server.support.MockTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-import java.util.List;
 import java.time.LocalDate;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import kr.hhplus.be.server.support.MockTestSupport;
 
 class OrderServiceTest extends MockTestSupport{
 
@@ -30,11 +29,11 @@ class OrderServiceTest extends MockTestSupport{
     void createOrder() {
         // given
         OrderCommand.Create command = OrderCommand.Create.of(1L,
-            1L,
-            0.1,
             List.of(
                 OrderCommand.OrderProduct.of(1L, "상품명", 2_000L, 2)
-            )
+            ),
+            1L,
+            0.1
         );
 
         // when
@@ -86,7 +85,7 @@ class OrderServiceTest extends MockTestSupport{
     @Test
     void getPaidProducts() {
         // given
-        OrderCommand.DateQuery command = OrderCommand.DateQuery.of(LocalDate.of(2025, 4, 23));
+        OrderCommand.PaidProducts command = OrderCommand.PaidProducts.of(LocalDate.of(2025, 4, 23), OrderStatus.PAID);
 
         List<OrderInfo.PaidProduct> paidProducts = List.of(
             OrderInfo.PaidProduct.of(1L, 2),

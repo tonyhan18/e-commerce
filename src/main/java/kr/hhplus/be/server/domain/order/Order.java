@@ -42,7 +42,7 @@ public class Order {
     private List<OrderProduct> orderProducts = new ArrayList<>();
     
     @Builder
-    private Order(Long userId, List<OrderProduct> orderProducts, Long userCouponId, double discountRate) {
+    private Order(Long userId, Long userCouponId, double discountRate, List<OrderProduct> orderProducts) {
         this.userId = userId;
         this.userCouponId = userCouponId;
         this.orderStatus = OrderStatus.CREATED;
@@ -55,7 +55,7 @@ public class Order {
         this.discountPrice = calculatedDiscountPrice;
     }
 
-    public static Order create(Long userId, List<OrderProduct> orderProducts, Long userCouponId, double discountRate) {
+    public static Order create(Long userId, Long userCouponId, double discountRate, List<OrderProduct> orderProducts) {
         validateOrderProducts(orderProducts);
         return Order.builder()
                 .userId(userId)
