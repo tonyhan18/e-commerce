@@ -1,8 +1,5 @@
 package kr.hhplus.be.server.domain.payment;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -18,17 +15,5 @@ public class PaymentService {
         paymentRepository.save(payment);
 
         return PaymentInfo.Payment.of(payment.getId());
-    }
-
-    public PaymentInfo.Orders getCompletedOrdersBetweenDays(int recentDays) {
-        LocalDateTime endDateTime = LocalDateTime.now();
-        LocalDateTime startDateTime = endDateTime.minusDays(recentDays);
-
-        List<Payment> completedPayments = paymentRepository
-            .findCompletedPaymentsWithIn(PaymentStatus.forCompleted(), startDateTime, endDateTime);
-
-        return PaymentInfo.Orders.of(completedPayments.stream()
-            .map(Payment::getOrderId)
-            .toList());
     }
 }
