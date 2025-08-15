@@ -12,12 +12,15 @@ import lombok.RequiredArgsConstructor;
 import kr.hhplus.be.server.domain.rank.RankCommand;
 import kr.hhplus.be.server.domain.rank.RankInfo;
 import kr.hhplus.be.server.domain.rank.RankType;
+import kr.hhplus.be.server.domain.rank.QRank;
+
 
 @Repository
 @RequiredArgsConstructor
 public class RankQueryDslRepository {
 
     private final JPAQueryFactory queryFactory;
+    private final QRank rank = QRank.rank;
 
     public List<RankInfo.PopularProduct> findPopularSellRanks(RankCommand.PopularSellRank command) {
         return queryFactory.select(

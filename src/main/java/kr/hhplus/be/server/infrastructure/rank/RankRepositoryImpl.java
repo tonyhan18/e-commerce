@@ -1,8 +1,14 @@
 package kr.hhplus.be.server.infrastructure.rank;
 
+import kr.hhplus.be.server.domain.rank.Rank;
+import kr.hhplus.be.server.domain.rank.RankCommand;
+import kr.hhplus.be.server.domain.rank.RankInfo;
+import kr.hhplus.be.server.domain.rank.RankRepository;
 import org.springframework.stereotype.Repository;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
