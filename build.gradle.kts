@@ -31,7 +31,6 @@ dependencyManagement {
 }
 
 val querydslVersion = "5.0.0"
-val restAssuredVersion = "5.3.2"
 val redissonVersion = "3.27.1"
 
 dependencies {
