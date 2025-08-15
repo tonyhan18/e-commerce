@@ -5,21 +5,27 @@ import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.user.UserCouponInfo;
 import kr.hhplus.be.server.domain.user.UserCouponService;
 import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.support.MockTestSupport;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.InOrder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-class UserCouponFacadeTest {
+class UserCouponFacadeTest extends MockTestSupport{
+
+    @InjectMocks
+    private UserCouponFacade userCouponFacade;
 
     @Mock
     private UserService userService;
@@ -30,86 +36,67 @@ class UserCouponFacadeTest {
     @Mock
     private UserCouponService userCouponService;
 
-    @InjectMocks
-    private UserCouponFacade userCouponFacade;
-
+    @DisplayName("사용자 쿠폰을 발급한다.")
     @Test
-    @DisplayName("사용자 쿠폰 발급 - 성공")
-    void publishUserCoupon_success() {
+    void publishUserCoupon() {
         // given
-        Long userId = 1L;
-        Long couponId = 1L;
         UserCouponCriteria.Publish criteria = mock(UserCouponCriteria.Publish.class);
-        when(criteria.getUserId()).thenReturn(userId);
-        when(criteria.getCouponId()).thenReturn(couponId);
 
         // when
         userCouponFacade.publishUserCoupon(criteria);
 
         // then
-        verify(userService, times(1)).getUser(userId);
-        verify(couponService, times(1)).publishCoupon(couponId);
-        verify(userCouponService, times(1)).createUserCoupon(any());
+        InOrder inOrder = inOrder(userService, couponService, userCouponService);
+        inOrder.verify(userService, times(1)).getUser(criteria.getUserId());
+        inOrder.verify(couponService, times(1)).publishCoupon(criteria.getCouponId());
+        inOrder.verify(userCouponService, times(1)).createUserCoupon(criteria.toCommand());
     }
 
+    @DisplayName("보유 쿠폰 목록을 조회한다.")
     @Test
-    @DisplayName("사용자 쿠폰 목록 조회 - 성공")
-    void getUserCoupons_success() {
+    void getUserCoupons() {
         // given
-        Long userId = 1L;
-        List<UserCouponInfo.Coupon> userCoupons = List.of(
-            mock(UserCouponInfo.Coupon.class),
-            mock(UserCouponInfo.Coupon.class)
-        );
-        UserCouponInfo.Coupons userCouponInfo = mock(UserCouponInfo.Coupons.class);
-        when(userCouponInfo.getCoupons()).thenReturn(userCoupons);
-        when(userCouponService.getUserCoupons(userId)).thenReturn(userCouponInfo);
+        UserCouponInfo.Coupons coupons = mock(UserCouponInfo.Coupons.class);
 
-        UserCouponInfo.Coupon userCoupon1 = userCoupons.get(0);
-        when(userCoupon1.getUserCouponId()).thenReturn(1L);
-        when(userCoupon1.getCouponId()).thenReturn(1L);
+        when(coupons.getCoupons())
+            .thenReturn(
+                List.of(
+                    UserCouponInfo.Coupon.builder()
+                        .userCouponId(1L)
+                        .couponId(1L)
+                        .issuedAt(LocalDateTime.of(2025, 4, 1, 12, 0, 0))
+                        .build(),
+                    UserCouponInfo.Coupon.builder()
+                        .userCouponId(2L)
+                        .couponId(2L)
+                        .issuedAt(LocalDateTime.of(2025, 4, 10, 12, 0, 0))
+                        .build()
+                )
+            );
 
-        UserCouponInfo.Coupon userCoupon2 = userCoupons.get(1);
-        when(userCoupon2.getUserCouponId()).thenReturn(2L);
-        when(userCoupon2.getCouponId()).thenReturn(2L);
+        when(userCouponService.getUserCoupons(anyLong()))
+            .thenReturn(coupons);
 
-        CouponInfo.Coupon coupon1 = mock(CouponInfo.Coupon.class);
-        when(coupon1.getName()).thenReturn("쿠폰1");
-        when(coupon1.getDiscountRate()).thenReturn(0.1);
-        when(couponService.getCoupon(1L)).thenReturn(coupon1);
-
-        CouponInfo.Coupon coupon2 = mock(CouponInfo.Coupon.class);
-        when(coupon2.getName()).thenReturn("쿠폰2");
-        when(coupon2.getDiscountRate()).thenReturn(0.2);
-        when(couponService.getCoupon(2L)).thenReturn(coupon2);
+        when(couponService.getCoupon(anyLong()))
+            .thenReturn(CouponInfo.Coupon.builder()
+                .name("10% 쿠폰명")
+                .discountRate(0.1)
+                .build()
+            );
 
         // when
-        UserCouponResult.Coupons result = userCouponFacade.getUserCoupons(userId);
+        UserCouponResult.Coupons result = userCouponFacade.getUserCoupons(1L);
 
         // then
-        assertThat(result).isNotNull();
-        verify(userService, times(1)).getUser(userId);
-        verify(userCouponService, times(1)).getUserCoupons(userId);
-        verify(couponService, times(2)).getCoupon(any(Long.class));
-    }
+        InOrder inOrder = inOrder(userCouponService, couponService);
+        inOrder.verify(userCouponService, times(1)).getUserCoupons(anyLong());
+        inOrder.verify(couponService, times(2)).getCoupon(anyLong());
 
-    @Test
-    @DisplayName("사용자 쿠폰 목록 조회 - 빈 결과")
-    void getUserCoupons_empty() {
-        // given
-        Long userId = 1L;
-        List<UserCouponInfo.Coupon> userCoupons = List.of();
-        UserCouponInfo.Coupons userCouponInfo = mock(UserCouponInfo.Coupons.class);
-        when(userCouponInfo.getCoupons()).thenReturn(userCoupons);
-        when(userCouponService.getUserCoupons(userId)).thenReturn(userCouponInfo);
-
-        // when
-        UserCouponResult.Coupons result = userCouponFacade.getUserCoupons(userId);
-
-        // then
-        assertThat(result).isNotNull();
-        verify(userService, times(1)).getUser(userId);
-        verify(userCouponService, times(1)).getUserCoupons(userId);
-        verify(couponService, never()).getCoupon(any(Long.class));
+        assertThat(result.getCoupons())
+            .extracting("userCouponId", "couponName", "discountRate")
+            .containsExactlyInAnyOrder(
+                tuple(1L, "10% 쿠폰명", 0.1),
+                tuple(2L, "10% 쿠폰명", 0.1)
+            );
     }
 } 
