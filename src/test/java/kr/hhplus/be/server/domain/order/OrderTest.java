@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -144,7 +145,7 @@ class OrderTest {
         Order order = Order.create(userId, orderProducts, userCouponId, discountRate);
 
         // when
-        order.paid();
+        order.paid(LocalDateTime.now());
 
         // then
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);

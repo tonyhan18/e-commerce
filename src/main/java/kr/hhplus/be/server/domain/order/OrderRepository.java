@@ -13,4 +13,6 @@ public interface OrderRepository {
     void sendOrderMessage(Order order);
 
     List<OrderProduct> findOrderIdsIn(List<Long> orderIds);
+
+    List<OrderInfo.PaidProduct> findPaidProducts(OrderCommand.PaidProducts command);
 }
