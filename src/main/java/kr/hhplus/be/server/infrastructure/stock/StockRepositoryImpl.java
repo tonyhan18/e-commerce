@@ -25,8 +25,8 @@ public class StockRepositoryImpl implements StockRepository {
     }
 
     @Override
-    public Stock findWithLockByProductId(Long productId) {
-        return stockJpaRepository.findWithLockByProductId(productId)
+    public Stock findByProductIdWithLock(Long productId) {
+        return stockJpaRepository.findByProductIdWithLock(productId)
             .orElseThrow(() -> new IllegalArgumentException("재고가 없습니다."));
     }
 } 

@@ -12,7 +12,7 @@ public class CouponService {
 
     @Transactional
     public void publishCoupon(Long couponId) {
-        Coupon coupon = couponRepository.findWithLockById(couponId);
+        Coupon coupon = couponRepository.findByIdWithLock(couponId);
         coupon.publish();
         couponRepository.save(coupon); // 변경사항을 데이터베이스에 저장
     }
