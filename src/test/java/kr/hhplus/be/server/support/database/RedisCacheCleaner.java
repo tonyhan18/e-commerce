@@ -1,7 +1,5 @@
 package kr.hhplus.be.server.support.database;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Profile;
 
@@ -9,8 +7,7 @@ import org.springframework.context.annotation.Profile;
 @Profile("test")
 public class RedisCacheCleaner {
     
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-
-
+    public void clean() {
+        // Redis 캐시 정리 로직이 필요한 경우 여기에 구현
+    }
 }

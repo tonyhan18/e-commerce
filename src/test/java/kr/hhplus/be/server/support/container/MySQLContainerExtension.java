@@ -13,8 +13,7 @@ public class MySQLContainerExtension implements BeforeAllCallback {
         MYSQL_CONTAINER = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
             .withDatabaseName("hhplus")
             .withUsername("test")
-            .withPassword("test")
-            .withInitScript("init-scripts/01-init-data.sql");
+            .withPassword("test");
     }
 
     @Override
