@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ProductRespository {
+public interface ProductRepository {
 
     Product save(Product product);
     Product findById(Long productId);

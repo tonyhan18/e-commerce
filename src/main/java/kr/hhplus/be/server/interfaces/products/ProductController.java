@@ -19,10 +19,4 @@ public class ProductController {
         ProductResult.Products products = productFacade.getProducts();
         return ApiResponse.success(ProductResponse.Products.of(products));
     }
-
-    @GetMapping("/ranks")
-    public ApiResponse<ProductResponse.Products> getPopularProducts() {
-        ProductResult.Products products = productFacade.getPopularProducts();
-        return ApiResponse.success(ProductResponse.Products.of(products));
-    }
 } 

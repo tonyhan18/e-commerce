@@ -6,7 +6,12 @@ import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.rank.RankCommand;
 import kr.hhplus.be.server.domain.rank.RankInfo;
 import kr.hhplus.be.server.domain.rank.RankRepository;
+import kr.hhplus.be.server.domain.product.Product;
+import kr.hhplus.be.server.domain.product.ProductRepository;
+import kr.hhplus.be.server.domain.product.ProductSellingStatus;
+import kr.hhplus.be.server.domain.rank.Rank;
 import kr.hhplus.be.server.support.IntegrationTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +34,25 @@ class RankFacadeIntegrationTest extends IntegrationTestSupport {
 
     @Autowired
     private RankRepository rankRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    private Product product1;
+
+    private Product product2;
+
+    private Product product3;
+
+    @BeforeEach
+    void setUp() {
+        product1 = Product.create("상품명1", 1_000L, ProductSellingStatus.SELLING);
+        product2 = Product.create("상품명2", 2_000L, ProductSellingStatus.SELLING);
+        product3 = Product.create("상품명3", 3_000L, ProductSellingStatus.STOP_SELLING);
+
+        List.of(product1, product2, product3)
+            .forEach(productRepository::save);
+    }
 
     @DisplayName("일별 랭킹을 생성한다.")
     @Test
@@ -65,6 +89,27 @@ class RankFacadeIntegrationTest extends IntegrationTestSupport {
         assertThat(result).hasSize(3)
             .extracting(RankInfo.PopularProduct::getProductId)
             .containsExactly(3L, 2L, 1L);
+    }
+
+    @DisplayName("상위 상품을 조회한다.")
+    @Test
+    void getPopularProducts() {
+        // given
+        List<Rank> ranks = List.of(
+            Rank.createSell(product1.getId(), LocalDate.now().minusDays(1), 10L),
+            Rank.createSell(product2.getId(), LocalDate.now().minusDays(1), 34L),
+            Rank.createSell(product3.getId(), LocalDate.now().minusDays(2), 42L)
+        );
+
+        ranks.forEach(rankRepository::save);
+
+        // when
+        RankResult.PopularProducts products = rankFacade.getPopularProducts(RankCriteria.PopularProducts.ofTop5Days3());
+
+        // then
+        assertThat(products.getProducts()).hasSize(3)
+            .extracting("productId")
+            .containsExactly(product3.getId(), product2.getId(), product1.getId());
     }
 
 }

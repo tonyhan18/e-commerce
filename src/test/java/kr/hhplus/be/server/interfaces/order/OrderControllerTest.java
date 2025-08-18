@@ -1,7 +1,10 @@
-package kr.hhplus.be.server.interfaces.orders;
+package kr.hhplus.be.server.interfaces.order;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.hhplus.be.server.application.order.OrderFacade;
+import kr.hhplus.be.server.interfaces.orders.OrderController;
+import kr.hhplus.be.server.interfaces.orders.OrderRequest;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

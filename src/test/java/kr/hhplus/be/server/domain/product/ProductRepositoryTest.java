@@ -14,10 +14,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ProductRespositoryTest {
+class ProductRepositoryTest {
 
     @Mock
-    private ProductRespository productRespository;
+    private ProductRepository productRepository;
 
     private Product testProduct;
 
@@ -35,15 +35,15 @@ class ProductRespositoryTest {
     @DisplayName("상품 저장 - 성공")
     void save_success() {
         // given
-        when(productRespository.save(any(Product.class))).thenReturn(testProduct);
+        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
 
         // when
-        Product savedProduct = productRespository.save(testProduct);
+        Product savedProduct = productRepository.save(testProduct);
 
         // then
         assertThat(savedProduct).isNotNull();
         assertThat(savedProduct.getId()).isEqualTo(1L);
-        verify(productRespository, times(1)).save(testProduct);
+        verify(productRepository, times(1)).save(testProduct);
     }
 
     @Test
@@ -51,16 +51,16 @@ class ProductRespositoryTest {
     void findById_success() {
         // given
         Long productId = 1L;
-        when(productRespository.findById(productId)).thenReturn(testProduct);
+        when(productRepository.findById(productId)).thenReturn(testProduct);
 
         // when
-        Product result = productRespository.findById(productId);
+        Product result = productRepository.findById(productId);
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("테스트 상품");
-        verify(productRespository, times(1)).findById(productId);
+        verify(productRepository, times(1)).findById(productId);
     }
 
     @Test
@@ -68,13 +68,13 @@ class ProductRespositoryTest {
     void findById_notFound() {
         // given
         Long productId = 999L;
-        when(productRespository.findById(productId))
+        when(productRepository.findById(productId))
             .thenThrow(new IllegalArgumentException("Product not found with id: 999"));
 
         // when & then
-        assertThat(productRespository.findById(productId))
+        assertThat(productRepository.findById(productId))
             .isNull();
-        verify(productRespository, times(1)).findById(productId);
+        verify(productRepository, times(1)).findById(productId);
     }
 
     @Test
@@ -83,14 +83,14 @@ class ProductRespositoryTest {
         // given
         List<ProductSellingStatus> sellStatuses = List.of(ProductSellingStatus.SELLING);
         List<Product> products = List.of(testProduct);
-        when(productRespository.findSellingStatusIn(sellStatuses)).thenReturn(products);
+        when(productRepository.findSellingStatusIn(sellStatuses)).thenReturn(products);
 
         // when
-        List<Product> result = productRespository.findSellingStatusIn(sellStatuses);
+        List<Product> result = productRepository.findSellingStatusIn(sellStatuses);
 
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(1L);
-        verify(productRespository, times(1)).findSellingStatusIn(sellStatuses);
+        verify(productRepository, times(1)).findSellingStatusIn(sellStatuses);
     }
 } 

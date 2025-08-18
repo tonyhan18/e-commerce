@@ -1,7 +1,8 @@
-package kr.hhplus.be.server.config.web;
+package kr.hhplus.be.server.support.filter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,11 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoggingFilter extends OncePerRequestFilter{
 
-    private final ObjectMapper objectMapper;
-
-    public LoggingFilter(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+    private static final String TRACE_ID = "X-Trace-Id";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -32,34 +29,35 @@ public class LoggingFilter extends OncePerRequestFilter{
         ContentCachingRequestWrapper requestWrapper = new ContentCachingRequestWrapper(request);
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
 
+        String traceId = UUID.randomUUID().toString();
+        responseWrapper.setHeader(TRACE_ID, traceId);
+
         long startTime = System.currentTimeMillis();
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
         } finally {
-            logRequest(requestWrapper);
-
             long duration = System.currentTimeMillis() - startTime;
-            logResponse(responseWrapper, duration);
+            logRequestResponse(requestWrapper, responseWrapper, duration, traceId);
 
             responseWrapper.copyBodyToResponse();
         }
     }
 
-    private void logRequest(ContentCachingRequestWrapper request) {
+    private void logRequestResponse(ContentCachingRequestWrapper request,
+                                    ContentCachingResponseWrapper response,
+                                    long duration,
+                                    String traceId) {
         String ip = request.getRemoteAddr();
         String method = request.getMethod();
         String url = request.getRequestURL().toString();
         String requestBody = getContent(request.getContentAsByteArray());
-
-        log.info("[REQUEST] IP: {}, Method: {}, URL: {}, Body: {}", ip, method, url, requestBody);
-    }
-
-    private void logResponse(ContentCachingResponseWrapper response, long duration) {
         int status = response.getStatus();
         String responseBody = getContent(response.getContentAsByteArray());
 
-        log.info("[RESPONSE] Duration: {}ms, Status: {}, Body: {}", duration, status, responseBody);
+        log.info("[API] traceId: {}, ip: {}, method: {}, url: {}, status: {}, latency: {}ms request: {}, response: {}",
+            traceId, ip, method, url, status, duration, requestBody, responseBody
+        );
     }
 
     private String getContent(byte[] content) {
@@ -68,5 +66,4 @@ public class LoggingFilter extends OncePerRequestFilter{
         }
         return "[EMPTY]";
     }
-    
 }

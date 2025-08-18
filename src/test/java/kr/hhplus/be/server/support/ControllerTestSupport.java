@@ -19,11 +19,15 @@ import kr.hhplus.be.server.interfaces.products.ProductController;
 import kr.hhplus.be.server.application.user.UserCouponFacade;
 import kr.hhplus.be.server.interfaces.user.UserCouponController;
 
+import kr.hhplus.be.server.application.rank.RankFacade;
+import kr.hhplus.be.server.interfaces.rank.RankController;
+
 @WebMvcTest(controllers = {
     BalanceController.class,
     UserCouponController.class,
     OrderController.class,
     ProductController.class,
+    RankController.class,
 })
 public abstract class ControllerTestSupport {
     @Autowired
@@ -40,6 +44,9 @@ public abstract class ControllerTestSupport {
 
     @MockitoBean
     protected ProductFacade productFacade;
+
+    @MockitoBean
+    protected RankFacade rankFacade;
 
     @MockitoBean
     protected UserCouponFacade userCouponFacade;
