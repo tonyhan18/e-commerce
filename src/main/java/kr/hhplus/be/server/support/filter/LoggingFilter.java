@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.config.web;
+package kr.hhplus.be.server.support.filter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
