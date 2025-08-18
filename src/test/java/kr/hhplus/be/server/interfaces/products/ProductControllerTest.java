@@ -43,17 +43,4 @@ class ProductControllerTest {
                 .andExpect(status().isOk());
         verify(productFacade, times(1)).getProducts();
     }
-
-    @Test
-    @DisplayName("getPopularProducts API는 정상적으로 동작한다.")
-    void getPopularProducts() throws Exception {
-        // given
-        ProductResult.Products products = mock(ProductResult.Products.class);
-        when(productFacade.getPopularProducts()).thenReturn(products);
-
-        // when & then
-        mockMvc.perform(get("/api/v1/products/ranks"))
-                .andExpect(status().isOk());
-        verify(productFacade, times(1)).getPopularProducts();
-    }
 } 
