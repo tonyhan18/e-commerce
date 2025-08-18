@@ -32,23 +32,19 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
-    private LocalDateTime paidAt;
-
     @Builder    
     private Payment(
         Long id,
         Long orderId, 
         Long amount, 
         PaymentMethod paymentMethod,
-        PaymentStatus paymentStatus,
-        LocalDateTime paidAt
+        PaymentStatus paymentStatus
     ) {
         this.id = id;
         this.orderId = orderId;
         this.amount = amount;
         this.paymentMethod = paymentMethod;
         this.paymentStatus = paymentStatus;
-        this.paidAt = paidAt;
     }
 
     public static Payment create(Long orderId, Long amount) {
@@ -67,7 +63,6 @@ public class Payment {
             throw new IllegalStateException("결제 불가능한 상태입니다.");
         }
         this.paymentStatus = PaymentStatus.COMPLETED;
-        this.paidAt = LocalDateTime.now();
     }
 
     private static void validateAmount(Long amount) {

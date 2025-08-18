@@ -31,7 +31,7 @@ class OrderRepositoryTest {
                 .quantity(1)
                 .build();
         
-        testOrder = Order.create(1L, List.of(testOrderProduct), null, 0.0);
+        testOrder = Order.create(1L, null, 0.0, List.of(testOrderProduct));
     }
 
     @Test

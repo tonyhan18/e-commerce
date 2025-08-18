@@ -21,7 +21,7 @@ public class BalanceController {
     }
 
     @PostMapping("/{userId}/balance/charge")
-    public ApiResponse<Void> updateBalance(@PathVariable Long userId, 
+    public ApiResponse<Void> chargeBalance(@PathVariable Long userId, 
                                            @Valid @RequestBody BalanceRequest.Charge request) {
         balanceFacade.chargeBalance(request.toCriteria(userId));
         return ApiResponse.success();

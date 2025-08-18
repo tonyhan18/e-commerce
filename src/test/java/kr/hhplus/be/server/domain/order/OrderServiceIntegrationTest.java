@@ -2,157 +2,98 @@ package kr.hhplus.be.server.domain.order;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import kr.hhplus.be.server.support.IntegrationTestSupport;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.tuple;
 
-@ExtendWith(MockitoExtension.class)
-class OrderServiceIntegrationTest {
+@Transactional
+class OrderServiceIntegrationTest extends IntegrationTestSupport{
 
-    @Mock
+    @Autowired
     private OrderRepository orderRepository;
 
-    @Mock
-    private OrderExternalClient orderExternalClient;
-
-    @InjectMocks
+    @Autowired
     private OrderService orderService;
 
+    @DisplayName("주문을 생성한다.")
     @Test
-    @DisplayName("주문 생성 - 성공")
-    void createOrder_success() {
+    void createOrder() {
         // given
-        List<OrderCommand.OrderProduct> orderProducts = List.of(
-            OrderCommand.OrderProduct.of(1L, "상품1", 10000L, 2),
-            OrderCommand.OrderProduct.of(2L, "상품2", 5000L, 1)
-        );
-        OrderCommand.Create command = OrderCommand.Create.of(1L, orderProducts, null, 0.0);
-        
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        OrderCommand.Create command = OrderCommand.Create.of(1L, List.of(
+            OrderCommand.OrderProduct.of(1L, "상품1", 10_000L, 2),
+            OrderCommand.OrderProduct.of(2L, "상품2", 20_000L, 3)
+        ), 1L, 0.1);
 
         // when
-        OrderInfo.Order result = orderService.createOrder(command);
+        OrderInfo.Order order = orderService.createOrder(command);
 
         // then
-        assertThat(result).isNotNull();
-        verify(orderRepository, times(1)).save(any(Order.class));
+        assertThat(order.getOrderId()).isNotNull();
+        assertThat(order.getTotalPrice()).isEqualTo(72_000L);
+        assertThat(order.getDiscountPrice()).isEqualTo(8_000L);
     }
 
+    @DisplayName("주문을 결제완료처리 한다.")
     @Test
-    @DisplayName("인기 상품 조회 - 성공")
-    void getTopPaidProducts_success() {
+    void paidOrder() {
         // given
-        List<Long> orderIds = List.of(1L, 2L);
-        OrderCommand.TopOrders command = OrderCommand.TopOrders.of(orderIds, 10);
-        
-        List<OrderProduct> orderProducts = List.of(
-            mock(OrderProduct.class),
-            mock(OrderProduct.class),
-            mock(OrderProduct.class)
-        );
-        
-        when(orderProducts.get(0).getProductId()).thenReturn(1L);
-        when(orderProducts.get(0).getQuantity()).thenReturn(3);
-        when(orderProducts.get(1).getProductId()).thenReturn(2L);
-        when(orderProducts.get(1).getQuantity()).thenReturn(1);
-        when(orderProducts.get(2).getProductId()).thenReturn(1L);
-        when(orderProducts.get(2).getQuantity()).thenReturn(2);
-        
-        when(orderRepository.findOrderIdsIn(orderIds)).thenReturn(orderProducts);
+        Order order = Order.create(1L, 1L, 0.1, List.of(
+            OrderProduct.create(1L, "상품1", 10_000L, 2),
+            OrderProduct.create(2L, "상품2", 20_000L, 3)
+        ));
+        orderRepository.save(order);
 
         // when
-        OrderInfo.TopPaidProducts result = orderService.getTopPaidProducts(command);
+        orderService.paidOrder(order.getId());
 
         // then
-        assertThat(result).isNotNull();
-        verify(orderRepository, times(1)).findOrderIdsIn(orderIds);
+        Order result = orderRepository.findById(order.getId());
+        assertThat(result.getOrderStatus()).isEqualTo(OrderStatus.PAID);
     }
 
+    @DisplayName("결제 완료 된 상품을 요청한 날짜에 조회한다.")
     @Test
-    @DisplayName("인기 상품 조회 - 빈 결과")
-    void getTopPaidProducts_empty() {
+    void getPaidProducts() {
         // given
-        List<Long> orderIds = List.of(1L, 2L);
-        OrderCommand.TopOrders command = OrderCommand.TopOrders.of(orderIds, 10);
-        List<OrderProduct> orderProducts = List.of();
-        when(orderRepository.findOrderIdsIn(orderIds)).thenReturn(orderProducts);
+        Order order1 = Order.create(1L, 1L, 0.1, List.of(
+            OrderProduct.create(1L, "상품1", 10_000L, 2),
+            OrderProduct.create(2L, "상품2", 20_000L, 3)
+        ));
+        Order order2 = Order.create(1L, 1L, 0.1, List.of(
+            OrderProduct.create(1L, "상품1", 10_000L, 2),
+            OrderProduct.create(3L, "상품3", 30_000L, 4)
+        ));
+        Order order3 = Order.create(1L, 1L, 0.1, List.of(
+            OrderProduct.create(2L, "상품2", 20_000L, 3),
+            OrderProduct.create(3L, "상품3", 30_000L, 4)
+        ));
+
+        List.of(order1, order2, order3)
+            .forEach(order -> {
+                order.paid(LocalDateTime.of(2025, 4, 22, 12, 0, 0));
+                orderRepository.save(order);
+            });
+
+        OrderCommand.PaidProducts command = OrderCommand.PaidProducts.of(LocalDate.of(2025, 4, 23), OrderStatus.PAID);
 
         // when
-        OrderInfo.TopPaidProducts result = orderService.getTopPaidProducts(command);
+        OrderInfo.PaidProducts result = orderService.getPaidProducts(command);
 
         // then
-        assertThat(result).isNotNull();
-        verify(orderRepository, times(1)).findOrderIdsIn(orderIds);
-    }
-
-    @Test
-    @DisplayName("주문 결제 완료 처리 - 성공")
-    void paidOrder_success() {
-        // given
-        Long orderId = 1L;
-        Order mockOrder = mock(Order.class);
-        when(orderRepository.findById(orderId)).thenReturn(mockOrder);
-        doNothing().when(orderExternalClient).sendOrderMessage(any(Order.class));
-
-        // when
-        orderService.paidOrder(orderId);
-
-        // then
-        verify(orderRepository, times(1)).findById(orderId);
-        verify(mockOrder, times(1)).paid();
-        verify(orderExternalClient, times(1)).sendOrderMessage(mockOrder);
-    }
-
-    @Test
-    @DisplayName("주문 생성 - 할인 쿠폰 적용")
-    void createOrder_withDiscount() {
-        // given
-        List<OrderCommand.OrderProduct> orderProducts = List.of(
-            OrderCommand.OrderProduct.of(1L, "상품1", 10000L, 1)
-        );
-        OrderCommand.Create command = OrderCommand.Create.of(1L, orderProducts, 1L, 0.1); // 10% 할인
-        
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // when
-        OrderInfo.Order result = orderService.createOrder(command);
-
-        // then
-        assertThat(result).isNotNull();
-        verify(orderRepository, times(1)).save(any(Order.class));
-    }
-
-    @Test
-    @DisplayName("인기 상품 조회 - 동일 수량의 상품들")
-    void getTopPaidProducts_sameQuantity() {
-        // given
-        List<Long> orderIds = List.of(1L, 2L);
-        OrderCommand.TopOrders command = OrderCommand.TopOrders.of(orderIds, 10);
-        
-        List<OrderProduct> orderProducts = List.of(
-            mock(OrderProduct.class),
-            mock(OrderProduct.class)
-        );
-        
-        when(orderProducts.get(0).getProductId()).thenReturn(1L);
-        when(orderProducts.get(0).getQuantity()).thenReturn(2);
-        when(orderProducts.get(1).getProductId()).thenReturn(2L);
-        when(orderProducts.get(1).getQuantity()).thenReturn(2);
-        
-        when(orderRepository.findOrderIdsIn(orderIds)).thenReturn(orderProducts);
-
-        // when
-        OrderInfo.TopPaidProducts result = orderService.getTopPaidProducts(command);
-
-        // then
-        assertThat(result).isNotNull();
-        verify(orderRepository, times(1)).findOrderIdsIn(orderIds);
+        assertThat(result.getProducts()).hasSize(3)
+            .extracting("productId", "quantity")
+            .containsExactlyInAnyOrder(
+                tuple(1L, 4),
+                tuple(2L, 6),
+                tuple(3L, 8)
+            );
     }
 } 

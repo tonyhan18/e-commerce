@@ -1,29 +1,31 @@
 package kr.hhplus.be.server.application.product;
 
-import kr.hhplus.be.server.domain.order.OrderCommand;
-import kr.hhplus.be.server.domain.order.OrderInfo;
-import kr.hhplus.be.server.domain.order.OrderService;
-import kr.hhplus.be.server.domain.payment.PaymentInfo;
-import kr.hhplus.be.server.domain.payment.PaymentService;
+import kr.hhplus.be.server.domain.rank.RankInfo;
+import kr.hhplus.be.server.domain.rank.RankService;
 import kr.hhplus.be.server.domain.product.ProductInfo;
 import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.domain.stock.StockInfo;
 import kr.hhplus.be.server.domain.stock.StockService;
+import kr.hhplus.be.server.support.MockTestSupport;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.InOrder;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-class ProductFacadeTest {
+class ProductFacadeTest extends MockTestSupport{
+
+    @InjectMocks
+    private ProductFacade productFacade;
 
     @Mock
     private ProductService productService;
@@ -32,101 +34,122 @@ class ProductFacadeTest {
     private StockService stockService;
 
     @Mock
-    private PaymentService paymentService;
+    private RankService rankService;
 
-    @Mock
-    private OrderService orderService;
-
-    @InjectMocks
-    private ProductFacade productFacade;
-
+    @DisplayName("판매 가능 상품 목록을 조회한다.")
     @Test
-    @DisplayName("상품 목록 조회 - 성공")
-    void getProducts_success() {
+    void getProducts() {
         // given
-        List<ProductInfo.Product> products = List.of(
-            mock(ProductInfo.Product.class),
-            mock(ProductInfo.Product.class)
-        );
-        ProductInfo.Products productInfo = mock(ProductInfo.Products.class);
-        when(productInfo.getProducts()).thenReturn(products);
-        when(productService.getSellingProducts()).thenReturn(productInfo);
+        ProductInfo.Products products = mock(ProductInfo.Products.class);
 
-        ProductInfo.Product product1 = products.get(0);
-        when(product1.getProductId()).thenReturn(1L);
-        when(product1.getProductName()).thenReturn("상품1");
-        when(product1.getProductPrice()).thenReturn(10000L);
+        when(products.getProducts())
+            .thenReturn(
+                List.of(
+                    ProductInfo.Product.builder()
+                        .productId(1L)
+                        .productName("상품명1")
+                        .productPrice(1_000L)
+                        .build(),
+                    ProductInfo.Product.builder()
+                        .productId(2L)
+                        .productName("상품명2")
+                        .productPrice(2_000L)
+                        .build()
+                )
+            );
 
-        ProductInfo.Product product2 = products.get(1);
-        when(product2.getProductId()).thenReturn(2L);
-        when(product2.getProductName()).thenReturn("상품2");
-        when(product2.getProductPrice()).thenReturn(20000L);
+        when(productService.getSellingProducts())
+            .thenReturn(products);
 
-        StockInfo.Stock stock1 = mock(StockInfo.Stock.class);
-        when(stock1.getQuantity()).thenReturn(10);
-        when(stockService.getStock(1L)).thenReturn(stock1);
-
-        StockInfo.Stock stock2 = mock(StockInfo.Stock.class);
-        when(stock2.getQuantity()).thenReturn(5);
-        when(stockService.getStock(2L)).thenReturn(stock2);
+        when(stockService.getStock(anyLong()))
+            .thenReturn(StockInfo.Stock.of(1L, 10));
 
         // when
         ProductResult.Products result = productFacade.getProducts();
 
         // then
-        assertThat(result).isNotNull();
-        verify(productService, times(1)).getSellingProducts();
-        verify(stockService, times(2)).getStock(any(Long.class));
+        InOrder inOrder = inOrder(productService, stockService);
+        inOrder.verify(productService, times(1)).getSellingProducts();
+        inOrder.verify(stockService, times(2)).getStock(anyLong());
+
+        assertThat(result.getProducts()).hasSize(2)
+            .extracting("productId", "quantity")
+            .containsExactlyInAnyOrder(
+                tuple(1L, 10),
+                tuple(2L, 10)
+            );
     }
 
+    @DisplayName("최근 3일 가장 많이 팔린 상위 상품 5개를 조회한다.")
     @Test
-    @DisplayName("인기 상품 목록 조회 - 성공")
-    void getPopularProducts_success() {
+    void getPopularProducts() {
         // given
-        List<Long> orderIds = List.of(1L, 2L);
-        PaymentInfo.Orders completedOrders = mock(PaymentInfo.Orders.class);
-        when(completedOrders.getOrderIds()).thenReturn(orderIds);
-        when(paymentService.getCompletedOrdersBetweenDays(3)).thenReturn(completedOrders);
+        RankInfo.PopularProducts rankPopularProducts = RankInfo.PopularProducts.of(List.of(
+            RankInfo.PopularProduct.of(1L, 120L),  // 1등 상품
+            RankInfo.PopularProduct.of(2L, 95L),   // 2등 상품
+            RankInfo.PopularProduct.of(3L, 87L),   // 3등 상품
+            RankInfo.PopularProduct.of(4L, 76L),   // 4등 상품
+            RankInfo.PopularProduct.of(5L, 65L)   // 5등 상품
+        ));
+        when(rankService.getPopularSellRank(any()))
+            .thenReturn(rankPopularProducts);
 
-        List<Long> productIds = List.of(1L, 2L);
-        OrderInfo.TopPaidProducts topPaidProducts = mock(OrderInfo.TopPaidProducts.class);
-        when(topPaidProducts.getProductIds()).thenReturn(productIds);
-        when(orderService.getTopPaidProducts(any())).thenReturn(topPaidProducts);
+        ProductInfo.Products products = ProductInfo.Products.of(List.of(
+            ProductInfo.Product.builder()
+                .productId(1L)
+                .productName("상품명1")
+                .productPrice(1_000L)
+                .build(),
+            ProductInfo.Product.builder()
+                .productId(2L)
+                .productName("상품명2")
+                .productPrice(2_000L)
+                .build(),
+            ProductInfo.Product.builder()
+                .productId(3L)
+                .productName("상품명3")
+                .productPrice(3_000L)
+                .build(),
+            ProductInfo.Product.builder()
+                .productId(4L)
+                .productName("상품명4")
+                .productPrice(4_000L)
+                .build(),
+            ProductInfo.Product.builder()
+                .productId(5L)
+                .productName("상품명5")
+                .productPrice(5_000L)
+                .build()
+        ));
 
-        List<ProductInfo.Product> products = List.of(
-            mock(ProductInfo.Product.class),
-            mock(ProductInfo.Product.class)
-        );
-        ProductInfo.Products productInfo = mock(ProductInfo.Products.class);
-        when(productInfo.getProducts()).thenReturn(products);
-        when(productService.getProducts(any())).thenReturn(productInfo);
+        when(productService.getProducts(any()))
+            .thenReturn(products);
 
-        ProductInfo.Product product1 = products.get(0);
-        when(product1.getProductId()).thenReturn(1L);
-        when(product1.getProductName()).thenReturn("인기 상품1");
-        when(product1.getProductPrice()).thenReturn(15000L);
+        when(stockService.getStock(anyLong()))
+            .thenReturn(StockInfo.Stock.of(1L, 10))
+            .thenReturn(StockInfo.Stock.of(2L, 10))
+            .thenReturn(StockInfo.Stock.of(3L, 10))
+            .thenReturn(StockInfo.Stock.of(4L, 10))
+            .thenReturn(StockInfo.Stock.of(5L, 10));
 
-        ProductInfo.Product product2 = products.get(1);
-        when(product2.getProductId()).thenReturn(2L);
-        when(product2.getProductName()).thenReturn("인기 상품2");
-        when(product2.getProductPrice()).thenReturn(25000L);
-
-        StockInfo.Stock stock1 = mock(StockInfo.Stock.class);
-        when(stock1.getQuantity()).thenReturn(8);
-        when(stockService.getStock(1L)).thenReturn(stock1);
-
-        StockInfo.Stock stock2 = mock(StockInfo.Stock.class);
-        when(stock2.getQuantity()).thenReturn(3);
-        when(stockService.getStock(2L)).thenReturn(stock2);
 
         // when
-        ProductResult.Products result = productFacade.getPopularProducts();
+        ProductResult.Products popularProducts = productFacade.getPopularProducts();
 
         // then
-        assertThat(result).isNotNull();
-        verify(paymentService, times(1)).getCompletedOrdersBetweenDays(3);
-        verify(orderService, times(1)).getTopPaidProducts(any());
-        verify(productService, times(1)).getProducts(any());
-        verify(stockService, times(2)).getStock(any(Long.class));
+        InOrder inOrder = inOrder(rankService, productService, stockService);
+        inOrder.verify(rankService, times(1)).getPopularSellRank(any());
+        inOrder.verify(productService, times(1)).getProducts(any());
+        inOrder.verify(stockService, times(5)).getStock(anyLong());
+
+        assertThat(popularProducts.getProducts()).hasSize(5)
+            .extracting("productId", "productName", "productPrice")
+            .containsExactly(
+                tuple(1L, "상품명1", 1_000L),
+                tuple(2L, "상품명2", 2_000L),
+                tuple(3L, "상품명3", 3_000L),
+                tuple(4L, "상품명4", 4_000L),
+                tuple(5L, "상품명5", 5_000L)
+            );
     }
 } 

@@ -13,17 +13,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     open-in-view: false
-    generate-ddl: true
-    show-sql: true
+    generate-ddl: false
+    show-sql: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
-      hibernate:
-        format_sql: true
-        show_sql: true
-        use_sql_comments: true
 
 ---
 spring.config.activate.on-profile: local, test
@@ -42,3 +38,16 @@ spring:
         format_sql: true
         show_sql: true
         use_sql_comments: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+---
+spring.config.activate.on-profile: test
+
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create

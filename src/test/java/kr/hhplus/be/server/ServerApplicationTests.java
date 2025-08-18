@@ -1,14 +1,14 @@
-// package kr.hhplus.be.server;
+package kr.hhplus.be.server;
 
-// import org.junit.jupiter.api.Test;
-// import org.springframework.boot.test.context.SpringBootTest;
-// import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import kr.hhplus.be.server.support.ContainerTestSupport;
 
-// @SpringBootTest
-// class ServerApplicationTests {
+@SpringBootTest
+class ServerApplicationTests extends ContainerTestSupport{
 
-// 	@Test
-// 	void contextLoads() {
-// 	}
+	@Test
+	void contextLoads() {
+	}
 
-// }
+}

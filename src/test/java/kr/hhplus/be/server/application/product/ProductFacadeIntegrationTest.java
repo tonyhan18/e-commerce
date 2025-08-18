@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.application.product;
 
 import jakarta.transaction.Transactional;
-// import kr.hhplus.be.server.domain.rank.Rank;
-// import kr.hhplus.be.server.domain.rank.RankRepository;
+import kr.hhplus.be.server.domain.rank.Rank;
+import kr.hhplus.be.server.domain.rank.RankRepository;
 import kr.hhplus.be.server.domain.stock.Stock;
 import kr.hhplus.be.server.domain.stock.StockRepository;
 import kr.hhplus.be.server.domain.product.Product;
@@ -32,8 +32,8 @@ class ProductFacadeIntegrationTest extends IntegrationTestSupport{
     @Autowired
     private StockRepository stockRepository;
 
-    // @Autowired
-    // private RankRepository rankRepository;
+    @Autowired
+    private RankRepository rankRepository;
 
     private Product product1;
 

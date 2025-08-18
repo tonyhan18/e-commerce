@@ -1,15 +1,15 @@
 package kr.hhplus.be.server.application.product;
 
+import java.time.LocalDate;
+
 import kr.hhplus.be.server.domain.stock.StockService;
 import kr.hhplus.be.server.domain.stock.StockInfo;
 import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.domain.product.ProductInfo;
-import kr.hhplus.be.server.domain.order.OrderService;
-import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.domain.order.OrderCommand;
 import kr.hhplus.be.server.domain.product.ProductCommand;
-import kr.hhplus.be.server.domain.payment.PaymentInfo;
-import kr.hhplus.be.server.domain.order.OrderInfo;
+import kr.hhplus.be.server.domain.rank.RankCommand;
+import kr.hhplus.be.server.domain.rank.RankInfo;
+import kr.hhplus.be.server.domain.rank.RankService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,29 +18,34 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ProductFacade {
     private static final int RECENT_DAYS = 3;
-    private static final int TOP_LIMIT = 3;
+    private static final int TOP_LIMIT = 5;
 
     private final ProductService productService;
     private final StockService stockService;
-    private final PaymentService paymentService;
-    private final OrderService orderService;
+    private final RankService rankService;
 
     @Transactional(readOnly = true)
     public ProductResult.Products getProducts() {
         ProductInfo.Products products = productService.getSellingProducts();
         return ProductResult.Products.of(products.getProducts().stream()
-        .map(this::getProduct)
-        .toList());
+            .map(this::getProduct)
+            .toList());
     }
 
     @Transactional(readOnly = true)
     public ProductResult.Products getPopularProducts() {
-        PaymentInfo.Orders completedOrders = paymentService.getCompletedOrdersBetweenDays(RECENT_DAYS);
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(RECENT_DAYS);
 
-        OrderCommand.TopOrders orderProductCommand = OrderCommand.TopOrders.of(completedOrders.getOrderIds(), TOP_LIMIT);
-        OrderInfo.TopPaidProducts topPaidProducts = orderService.getTopPaidProducts(orderProductCommand);
-        ProductInfo.Products products = productService.getProducts(ProductCommand.Products.of(topPaidProducts.getProductIds()));
-        return ProductResult.Products.of(products.getProducts().stream().map(this::getProduct).toList());
+        RankCommand.PopularSellRank popularSellRankCommand = RankCommand.PopularSellRank.of(TOP_LIMIT, startDate, endDate);
+        RankInfo.PopularProducts popularProducts = rankService.getPopularSellRank(popularSellRankCommand);
+
+        ProductCommand.Products productsCommand = ProductCommand.Products.of(popularProducts.getProductIds());
+        ProductInfo.Products products = productService.getProducts(productsCommand);
+
+        return ProductResult.Products.of(products.getProducts().stream()
+            .map(this::getProduct)
+            .toList());
     }
 
     private ProductResult.Product getProduct(ProductInfo.Product product) {

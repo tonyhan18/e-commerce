@@ -12,6 +12,7 @@ public class OrderRepositoryImpl implements OrderRepository {
     
     private final OrderJpaRepository orderJpaRepository;
     private final OrderProductJpaRepository orderProductJpaRepository;
+    private final OrderQueryDslRepository orderQueryDslRepository;  
 
     @Override
     public Order save(Order order) {
@@ -21,7 +22,7 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public Order findById(Long id) {
         return orderJpaRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + id));
+            .orElseThrow(() -> new IllegalArgumentException("주문이 존재하지 않습니다."));
     }
 
     @Override
@@ -30,8 +31,13 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
+    public List<OrderInfo.PaidProduct> findPaidProducts(OrderCommand.PaidProducts command) {
+        return orderQueryDslRepository.findPaidProducts(command);
+    }
+
+    @Override
     public void sendOrderMessage(Order order) {
-        // 주문 메시지 전송 로직은 별도 서비스에서 처리
-        // 여기서는 기본 구현만 제공
+        // TODO: 메시지 전송 로직 구현
+        // 현재는 구현하지 않음
     }
 } 

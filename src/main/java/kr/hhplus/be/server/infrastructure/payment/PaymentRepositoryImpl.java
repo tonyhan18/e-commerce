@@ -1,13 +1,12 @@
 package kr.hhplus.be.server.infrastructure.payment;
 
-import kr.hhplus.be.server.domain.payment.*;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.util.Optional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import org.springframework.stereotype.Component;
+
+import kr.hhplus.be.server.domain.payment.Payment;
+import kr.hhplus.be.server.domain.payment.PaymentRepository;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -23,10 +22,5 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     @Override
     public Optional<Payment> findById(Long id) {
         return paymentJpaRepository.findById(id);
-    }
-
-    @Override
-    public List<Payment> findCompletedPaymentsWithIn(List<PaymentStatus> statuses, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return paymentJpaRepository.findByPaymentStatusInAndPaidAtBetween(statuses, startDateTime, endDateTime);
     }
 }   

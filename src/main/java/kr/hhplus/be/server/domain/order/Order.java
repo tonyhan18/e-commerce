@@ -3,7 +3,7 @@ package kr.hhplus.be.server.domain.order;
 import java.util.ArrayList;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.time.LocalDateTime;
 import org.aspectj.weaver.ast.Or;
 
 import jakarta.persistence.*;
@@ -17,10 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "orders", indexes = {
-    @Index(name = "idx_orders_user_id", columnList = "user_id"),
-    @Index(name = "idx_orders_total_price", columnList = "totalPrice"),
-    @Index(name = "idx_orders_status", columnList = "orderStatus"),
-    @Index(name = "idx_orders_user_status", columnList = "user_id,orderStatus")
+    @Index(name = "idx_order_status_paid_at", columnList = "order_status, paid_at")
 })
 public class Order {
     @Id
@@ -39,11 +36,13 @@ public class Order {
 
     private long discountPrice;
 
+    private LocalDateTime paidAt;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderProduct> orderProducts = new ArrayList<>();
     
     @Builder
-    private Order(Long userId, List<OrderProduct> orderProducts, Long userCouponId, double discountRate) {
+    private Order(Long userId, Long userCouponId, double discountRate, List<OrderProduct> orderProducts) {
         this.userId = userId;
         this.userCouponId = userCouponId;
         this.orderStatus = OrderStatus.CREATED;
@@ -56,7 +55,7 @@ public class Order {
         this.discountPrice = calculatedDiscountPrice;
     }
 
-    public static Order create(Long userId, List<OrderProduct> orderProducts, Long userCouponId, double discountRate) {
+    public static Order create(Long userId, Long userCouponId, double discountRate, List<OrderProduct> orderProducts) {
         validateOrderProducts(orderProducts);
         return Order.builder()
                 .userId(userId)
@@ -66,8 +65,9 @@ public class Order {
                 .build();
     }
 
-    public void paid() {
+    public void paid(LocalDateTime paidAt) {
         this.orderStatus = OrderStatus.PAID;
+        this.paidAt = paidAt;
     }
 
     private long calculateTotalPrice(List<OrderProduct> orderProducts) {
