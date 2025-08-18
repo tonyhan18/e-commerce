@@ -6,14 +6,13 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Builder
 @RequiredArgsConstructor
 public class ProductService {
 
-    private final ProductRespository productRepository;
+    private final ProductRepository productRepository;
 
     public ProductInfo.OrderProducts getOrderProducts(ProductCommand.OrderProducts command) {
         List<ProductInfo.OrderProduct> orderProducts = command.getProducts().stream()

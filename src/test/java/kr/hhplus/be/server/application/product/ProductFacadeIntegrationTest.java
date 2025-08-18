@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.stock.Stock;
 import kr.hhplus.be.server.domain.stock.StockRepository;
 import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.ProductRespository;
+import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.product.ProductSellingStatus;
 import kr.hhplus.be.server.support.IntegrationTestSupport;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,7 @@ class ProductFacadeIntegrationTest extends IntegrationTestSupport{
     private ProductFacade productFacade;
 
     @Autowired
-    private ProductRespository productRepository;
+    private ProductRepository productRepository;
 
     @Autowired
     private StockRepository stockRepository;

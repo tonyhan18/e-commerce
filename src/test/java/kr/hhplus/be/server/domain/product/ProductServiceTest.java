@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 class ProductServiceTest {
 
     @Mock
-    private ProductRespository productRespository;
+    private ProductRepository productRepository;
 
     @InjectMocks
     private ProductService productService;
@@ -46,15 +46,15 @@ class ProductServiceTest {
         );
         ProductCommand.OrderProducts command = ProductCommand.OrderProducts.of(orderProducts);
         
-        when(productRespository.findById(1L)).thenReturn(testProduct);
-        when(productRespository.findById(2L)).thenReturn(testProduct);
+        when(productRepository.findById(1L)).thenReturn(testProduct);
+        when(productRepository.findById(2L)).thenReturn(testProduct);
 
         // when
         ProductInfo.OrderProducts result = productService.getOrderProducts(command);
 
         // then
         assertThat(result.getProducts()).hasSize(2);
-        verify(productRespository, times(2)).findById(any(Long.class));
+        verify(productRepository, times(2)).findById(any(Long.class));
     }
 
     @Test
@@ -73,13 +73,13 @@ class ProductServiceTest {
         );
         ProductCommand.OrderProducts command = ProductCommand.OrderProducts.of(orderProducts);
         
-        when(productRespository.findById(1L)).thenReturn(unsellableProduct);
+        when(productRepository.findById(1L)).thenReturn(unsellableProduct);
 
         // when & then
         assertThatThrownBy(() -> productService.getOrderProducts(command))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("주문 불가한 상품이 포함되어 있습니다.");
-        verify(productRespository, times(1)).findById(1L);
+        verify(productRepository, times(1)).findById(1L);
     }
 
     @Test
@@ -87,7 +87,7 @@ class ProductServiceTest {
     void getSellingProducts_success() {
         // given
         List<Product> products = List.of(testProduct);
-        when(productRespository.findSellingStatusIn(ProductSellingStatus.forSelling()))
+        when(productRepository.findSellingStatusIn(ProductSellingStatus.forSelling()))
             .thenReturn(products);
 
         // when
@@ -95,7 +95,7 @@ class ProductServiceTest {
 
         // then
         assertThat(result.getProducts()).hasSize(1);
-        verify(productRespository, times(1)).findSellingStatusIn(ProductSellingStatus.forSelling());
+        verify(productRepository, times(1)).findSellingStatusIn(ProductSellingStatus.forSelling());
     }
 
     @Test
@@ -105,14 +105,14 @@ class ProductServiceTest {
         List<Long> productIds = List.of(1L, 2L);
         ProductCommand.Products command = ProductCommand.Products.of(productIds);
         
-        when(productRespository.findById(1L)).thenReturn(testProduct);
-        when(productRespository.findById(2L)).thenReturn(testProduct);
+        when(productRepository.findById(1L)).thenReturn(testProduct);
+        when(productRepository.findById(2L)).thenReturn(testProduct);
 
         // when
         ProductInfo.Products result = productService.getProducts(command);
 
         // then
         assertThat(result.getProducts()).hasSize(2);
-        verify(productRespository, times(2)).findById(any(Long.class));
+        verify(productRepository, times(2)).findById(any(Long.class));
     }
 } 

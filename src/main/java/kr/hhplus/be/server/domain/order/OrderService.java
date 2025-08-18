@@ -37,8 +37,10 @@ public class OrderService {
         orderExternalClient.sendOrderMessage(order);
     }
 
-    public OrderInfo.PaidProducts getPaidProducts(OrderCommand.PaidProducts command) {
-        List<OrderInfo.PaidProduct> paidProducts = orderRepository.findPaidProducts(command);
+    public OrderInfo.PaidProducts getPaidProducts(OrderCommand.DateQuery command) {
+        OrderCommand.PaidProducts queryCommand = command.toPaidProductsQuery(OrderStatus.PAID);
+        List<OrderInfo.PaidProduct> paidProducts = orderRepository.findPaidProducts(queryCommand);
+
         return OrderInfo.PaidProducts.of(paidProducts);
     }
 

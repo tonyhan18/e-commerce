@@ -85,7 +85,7 @@ class OrderServiceTest extends MockTestSupport{
     @Test
     void getPaidProducts() {
         // given
-        OrderCommand.PaidProducts command = OrderCommand.PaidProducts.of(LocalDate.of(2025, 4, 23), OrderStatus.PAID);
+        OrderCommand.DateQuery command = OrderCommand.DateQuery.of(LocalDate.of(2025, 4, 23));
 
         List<OrderInfo.PaidProduct> paidProducts = List.of(
             OrderInfo.PaidProduct.of(1L, 2),

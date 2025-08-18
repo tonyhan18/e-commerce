@@ -9,7 +9,7 @@ import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.order.OrderStatus;
 import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.ProductRespository;
+import kr.hhplus.be.server.domain.product.ProductRepository;
 import kr.hhplus.be.server.domain.product.ProductSellingStatus;
 import kr.hhplus.be.server.domain.stock.Stock;
 import kr.hhplus.be.server.domain.stock.StockRepository;
@@ -40,7 +40,7 @@ class OrderFacadeIntegrationTest extends IntegrationTestSupport{
     private UserRepository userRepository;
 
     @Autowired
-    private ProductRespository productRepository;
+    private ProductRepository productRepository;
 
     @Autowired
     private StockRepository stockRepository;
