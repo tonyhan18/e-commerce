@@ -12,7 +12,6 @@ services:
       - MYSQL_DATABASE=hhplus
     volumes:
       - ./data/mysql/:/var/lib/mysql
-      - /d/25년/7월/e-commerce/init-scripts:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "application", "-papplication"]
       timeout: 20s
