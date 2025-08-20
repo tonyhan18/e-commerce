@@ -1,25 +1,15 @@
 package kr.hhplus.be.server.application.order;
 
-import kr.hhplus.be.server.domain.balance.Balance;
-import kr.hhplus.be.server.domain.balance.BalanceRepository;
-import kr.hhplus.be.server.domain.coupon.Coupon;
-import kr.hhplus.be.server.domain.coupon.CouponRepository;
-import kr.hhplus.be.server.domain.coupon.CouponStatus;
-import kr.hhplus.be.server.domain.order.Order;
-import kr.hhplus.be.server.domain.order.OrderRepository;
-import kr.hhplus.be.server.domain.order.OrderStatus;
-import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.domain.product.ProductRepository;
-import kr.hhplus.be.server.domain.product.ProductSellingStatus;
-import kr.hhplus.be.server.domain.stock.Stock;
-import kr.hhplus.be.server.domain.stock.StockRepository;
-import kr.hhplus.be.server.domain.user.User;
-import kr.hhplus.be.server.domain.user.UserCoupon;
-import kr.hhplus.be.server.domain.user.UserCouponRepository;
-import kr.hhplus.be.server.domain.user.UserCouponUsedStatus;
-import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.domain.balance.*;
+import kr.hhplus.be.server.domain.coupon.*;
+import kr.hhplus.be.server.domain.order.*;
+import kr.hhplus.be.server.domain.product.*;
+import kr.hhplus.be.server.domain.stock.*;
+import kr.hhplus.be.server.domain.user.*;
+import kr.hhplus.be.server.domain.rank.*;
 import kr.hhplus.be.server.support.IntegrationTestSupport;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +46,9 @@ class OrderFacadeIntegrationTest extends IntegrationTestSupport{
 
     @Autowired
     private CouponRepository couponRepository;
+
+    @Autowired
+    private RankRepository rankRepository;
 
     private User user;
 
@@ -101,6 +94,16 @@ class OrderFacadeIntegrationTest extends IntegrationTestSupport{
         Order order = orderRepository.findById(result.getOrderId());
         assertThat(order.getTotalPrice()).isEqualTo(200_000L);
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+
+        RankCommand.Query command = RankCommand.Query.of(
+            1,
+            RankKey.ofDays(RankType.SELL, 3),
+            RankKeys.ofDaysWithDate(RankType.SELL, 3, LocalDate.now())
+        );
+        List<RankInfo.PopularProduct> popularSellRanks = rankRepository.findPopularSellRanks(command);
+        assertThat(popularSellRanks).hasSize(1)
+            .extracting(RankInfo.PopularProduct::getProductId)
+            .containsExactly(product.getId());
     }
 
     @DisplayName("쿠폰이 있는 주문 결제를 한다.")
@@ -133,5 +136,15 @@ class OrderFacadeIntegrationTest extends IntegrationTestSupport{
         Order order = orderRepository.findById(result.getOrderId());
         assertThat(order.getTotalPrice()).isEqualTo(180_000L);
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PAID);
+
+        RankCommand.Query command = RankCommand.Query.of(
+            1,
+            RankKey.ofDays(RankType.SELL, 3),
+            RankKeys.ofDaysWithDate(RankType.SELL, 3, LocalDate.now())
+        );
+        List<RankInfo.PopularProduct> popularSellRanks = rankRepository.findPopularSellRanks(command);
+        assertThat(popularSellRanks).hasSize(1)
+            .extracting(RankInfo.PopularProduct::getProductId)
+            .containsExactly(product.getId());
     }
 } 
