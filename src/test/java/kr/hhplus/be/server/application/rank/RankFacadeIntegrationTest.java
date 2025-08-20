@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -30,6 +31,9 @@ class RankFacadeIntegrationTest extends IntegrationTestSupport {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private RedisTemplate<String, Long> redisTemplate;
 
     private Product product1;
 

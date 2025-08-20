@@ -77,10 +77,10 @@ public class OrderCriteria {
             return PaymentCommand.Payment.of(order.getOrderId(), userId, order.getTotalPrice());
         }
 
-        public RankCommand.CreateList toRankCommand(LocalDate date){
+        public RankCommand.CreateList toRankCommand(LocalDate date) {
             return RankCommand.CreateList.of(
                 products.stream()
-                    .map(o -> RankCommand.Create.of(userId, o.getProductId(), o.getQuantity()))
+                    .map(o -> RankCommand.Create.of(o.getProductId(), o.getQuantity(), date))
                     .toList()
             );
         }
