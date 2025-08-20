@@ -2,8 +2,10 @@ package kr.hhplus.be.server.support.lock;
 
 import java.util.concurrent.TimeUnit;
 
-import static kr.hhplus.be.server.support.transaction.TransactionUtils.executeAfterTransaction;
-import static kr.hhplus.be.server.support.transaction.TransactionUtils.hasNotActiveTransaction;
+import org.springframework.transaction.support.TransactionSynchronization;
+
+import static org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive;
+import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 public abstract class DefaultLockTemplate implements LockTemplate {
 
@@ -11,11 +13,16 @@ public abstract class DefaultLockTemplate implements LockTemplate {
     public <T> T executeWithLock(String key, long waitTime, long leaseTime, TimeUnit timeUnit, LockCallback<T> callback) throws Throwable {
         try {
             acquireLock(key, waitTime, leaseTime, timeUnit);
-            executeAfterTransaction(() -> releaseLock(key));
-
             return callback.doInLock();
         } finally {
-            if (hasNotActiveTransaction()) {
+            if (isActualTransactionActive()) {
+                registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        releaseLock(key);
+                    }
+                });
+            } else {
                 releaseLock(key);
             }
         }
