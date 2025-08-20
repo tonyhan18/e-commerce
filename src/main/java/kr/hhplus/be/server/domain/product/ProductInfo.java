@@ -39,9 +39,9 @@ public class ProductInfo {
             this.quantity = quantity;
         }
 
-        public static OrderProduct of(Long productId, String productName, Long productPrice, int quantity) {
-            return new OrderProduct(productId, productName, productPrice, quantity);
-        }
+        // public static OrderProduct of(Long productId, String productName, Long productPrice, int quantity) {
+        //     return new OrderProduct(productId, productName, productPrice, quantity);
+        // }
     }
 
     @Getter
