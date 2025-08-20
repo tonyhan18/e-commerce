@@ -11,11 +11,12 @@ import kr.hhplus.be.server.domain.product.ProductInfo;
 import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.domain.stock.StockService;
 import kr.hhplus.be.server.domain.user.UserCouponInfo;
-import kr.hhplus.be.server.domain.user.UserCouponInfo.Coupon;
 import kr.hhplus.be.server.domain.user.UserCouponService;
 import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.domain.rank.RankService;
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class OrderFacade {
     private final PaymentService paymentService;
     private final UserCouponService userCouponService;
     private final CouponService couponService;
+    private final RankService rankService;
 
     @Transactional
     public OrderResult.Order orderPayment(OrderCriteria.OrderPayment criteria) {
@@ -65,6 +67,7 @@ public class OrderFacade {
             throw e;
         }
         orderService.paidOrder(order.getOrderId());
+        rankService.createSellRank(criteria.toRankCommand(LocalDate.now()));
 
         return OrderResult.Order.of(order);
     }
