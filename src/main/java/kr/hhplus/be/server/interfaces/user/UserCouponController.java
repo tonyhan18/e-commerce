@@ -23,11 +23,13 @@ public class UserCouponController {
     }
 
     @PostMapping("/{userId}/coupons/publish")
-    public ApiResponse<Void> publishCoupon(@PathVariable Long userId, @Valid @RequestBody UserCouponRequest.Publish request) {
-        UserCouponCriteria.Publish command = request.toCriteria(userId);
-        userCouponFacade.publishUserCoupon(command);
+    public ApiResponse<Void> publishCoupon(@PathVariable Long userId, 
+                                            @Valid @RequestBody UserCouponRequest.Publish request) {
+        userCouponFacade.requestPublishUserCoupon(request.toCriteria(userId));
         return ApiResponse.success();
     }
+
+    
     
     
 }

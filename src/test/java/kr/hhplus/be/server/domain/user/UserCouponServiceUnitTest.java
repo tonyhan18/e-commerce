@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static kr.hhplus.be.server.application.user.UserCouponConstant.MAX_PUBLISH_COUNT_PER_REQUEST;
 import kr.hhplus.be.server.support.MockTestSupport;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

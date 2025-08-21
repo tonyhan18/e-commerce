@@ -39,7 +39,9 @@ public class UserCoupon {
     private LocalDateTime issuedAt;
     private LocalDateTime usedAt;
 
-
+    public static UserCoupon create(Long userId, Long couponId) {
+        return create(userId, couponId, LocalDateTime.now());
+    }
 
     public static UserCoupon create(Long userId, Long couponId, LocalDateTime issuedAt) {
         return UserCoupon.builder()

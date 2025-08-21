@@ -2,21 +2,17 @@ package kr.hhplus.be.server.domain.user;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.LongStream;
 
+import static kr.hhplus.be.server.application.user.UserCouponConstant.MAX_PUBLISH_COUNT_PER_REQUEST;
 import kr.hhplus.be.server.support.IntegrationTestSupport;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
 
 @Transactional
 class UserCouponServiceIntegrationTest extends IntegrationTestSupport{
