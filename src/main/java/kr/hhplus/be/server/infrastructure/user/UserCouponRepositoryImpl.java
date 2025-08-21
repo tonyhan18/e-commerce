@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.infrastructure.user;
 
-import kr.hhplus.be.server.domain.user.UserCoupon;
-import kr.hhplus.be.server.domain.user.UserCouponRepository;
-import kr.hhplus.be.server.domain.user.UserCouponUsedStatus;
+import kr.hhplus.be.server.domain.user.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +12,8 @@ import java.util.Optional;
 public class UserCouponRepositoryImpl implements UserCouponRepository {
     
     private final UserCouponJpaRepository userCouponJpaRepository;
+    private final UserCouponRedisRepository userCouponRedisRepository;
+    private final UserCouponJdbcTemplateRepository userCouponJdbcTemplateRepository;
 
     @Override
     public UserCoupon save(UserCoupon userCoupon) {
@@ -38,7 +38,27 @@ public class UserCouponRepositoryImpl implements UserCouponRepository {
     }
 
     @Override
-    public Optional<UserCoupon> findOptionalByUserIdAndCouponId(Long userId, Long couponId) {
-        return userCouponJpaRepository.findByUserIdAndCouponId(userId, couponId);
+    public boolean save(UserCouponCommand.PublishRequest command) {
+        return userCouponRedisRepository.save(command);
+    }
+
+    @Override
+    public int countByCouponId(Long couponId) {
+        return userCouponJpaRepository.countByCouponId(couponId);
+    }
+
+    @Override
+    public List<UserCouponInfo.Candidates> findPublishCandidates(UserCouponCommand.Candidates command) {
+        return userCouponRedisRepository.findPublishCandidates(command);
+    }
+
+    @Override
+    public void saveAll(List<UserCoupon> userCoupons) {
+        userCouponJdbcTemplateRepository.batchInsert(userCoupons);
+    }
+
+    @Override
+    public List<UserCoupon> findCouponId(Long couponId) {
+        return userCouponJpaRepository.findByCouponId(couponId);
     }
 } 

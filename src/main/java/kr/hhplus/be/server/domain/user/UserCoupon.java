@@ -41,11 +41,11 @@ public class UserCoupon {
 
 
 
-    public static UserCoupon create(Long userId, Long couponId) {
+    public static UserCoupon create(Long userId, Long couponId, LocalDateTime issuedAt) {
         return UserCoupon.builder()
             .userId(userId)
             .couponId(couponId)
-            .issuedAt(LocalDateTime.now())
+            .issuedAt(issuedAt)
             .usedStatus(UserCouponUsedStatus.UNUSED)
             .build();
     }
