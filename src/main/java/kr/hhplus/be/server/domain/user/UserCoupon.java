@@ -39,13 +39,15 @@ public class UserCoupon {
     private LocalDateTime issuedAt;
     private LocalDateTime usedAt;
 
-
-
     public static UserCoupon create(Long userId, Long couponId) {
+        return create(userId, couponId, LocalDateTime.now());
+    }
+
+    public static UserCoupon create(Long userId, Long couponId, LocalDateTime issuedAt) {
         return UserCoupon.builder()
             .userId(userId)
             .couponId(couponId)
-            .issuedAt(LocalDateTime.now())
+            .issuedAt(issuedAt)
             .usedStatus(UserCouponUsedStatus.UNUSED)
             .build();
     }

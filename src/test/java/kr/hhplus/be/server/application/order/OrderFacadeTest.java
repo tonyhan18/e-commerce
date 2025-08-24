@@ -12,6 +12,7 @@ import kr.hhplus.be.server.domain.stock.StockService;
 import kr.hhplus.be.server.domain.user.UserCouponInfo;
 import kr.hhplus.be.server.domain.user.UserCouponService;
 import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.domain.rank.RankService;
 import kr.hhplus.be.server.support.MockTestSupport;
 
 import org.junit.jupiter.api.DisplayName;
@@ -52,6 +53,9 @@ class OrderFacadeTest extends MockTestSupport{
     @Mock
     private PaymentService paymentService;
 
+    @Mock
+    private RankService rankService;
+
     @DisplayName("주문 결제를 한다.")
     @Test
     void orderPayment() {
@@ -79,7 +83,8 @@ class OrderFacadeTest extends MockTestSupport{
             orderService,
             balanceService,
             stockService,
-            paymentService
+            paymentService,
+            rankService
         );
 
         inOrder.verify(userService, times(1)).getUser(criteria.getUserId());
@@ -98,5 +103,6 @@ class OrderFacadeTest extends MockTestSupport{
         inOrder.verify(stockService, times(1)).deductStock(criteria.toStockCommand());
         inOrder.verify(paymentService, times(1)).pay(criteria.toPaymentCommand(mockOrder));
         inOrder.verify(orderService, times(1)).paidOrder(mockOrder.getOrderId());
+        inOrder.verify(rankService, times(1)).createSellRank(criteria.toRankCommand(any()));
     }
 } 

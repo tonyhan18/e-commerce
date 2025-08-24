@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import kr.hhplus.be.server.support.MockTestSupport;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -112,5 +113,62 @@ class CouponServiceTest  extends MockTestSupport{
         assertThatThrownBy(() -> couponService.publishCoupon(anyLong()))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("쿠폰 수량이 부족합니다.");
+    }
+
+    @DisplayName("발급 가능한 쿠폰 목록을 가져온다.")
+    @Test
+    void getPublishableCoupons() {
+        // given
+        List<Coupon> coupons = List.of(
+            Coupon.builder()
+                .id(1L)
+                .name("쿠폰명")
+                .status(CouponStatus.PUBLISHABLE)
+                .discountRate(0.1)
+                .quantity(1)
+                .expiredAt(LocalDateTime.now().plusDays(1))
+                .build(),
+            Coupon.builder()
+                .id(2L)
+                .name("쿠폰명2")
+                .status(CouponStatus.PUBLISHABLE)
+                .discountRate(0.1)
+                .quantity(10)
+                .expiredAt(LocalDateTime.now().plusDays(1))
+                .build()
+        );
+
+        when(couponRepository.findByStatus(CouponStatus.PUBLISHABLE))
+            .thenReturn(coupons);
+
+        // when
+        CouponInfo.PublishableCoupons publishableCoupons = couponService.getPublishableCoupons();
+
+        // then
+        assertThat(publishableCoupons.getCoupons()).hasSize(2)
+            .extracting(CouponInfo.PublishableCoupon::getCouponId)
+            .containsExactlyInAnyOrder(1L, 2L);
+    }
+
+    @DisplayName("쿠폰 발급을 종료한다.")
+    @Test
+    void finishCoupon() {
+        // given
+        Coupon coupon = Coupon.builder()
+            .id(1L)
+            .name("쿠폰명")
+            .status(CouponStatus.PUBLISHABLE)
+            .expiredAt(LocalDateTime.now().plusDays(1))
+            .quantity(1)
+            .build();
+
+        when(couponRepository.findById(anyLong()))
+            .thenReturn(coupon);
+
+        // when
+        couponService.finishCoupon(coupon.getId());
+
+        // then
+        assertThat(coupon.getStatus()).isEqualTo(CouponStatus.FINISHED);
     }
 } 

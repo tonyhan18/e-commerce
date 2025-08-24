@@ -7,6 +7,7 @@ import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.domain.user.UserCouponInfo;
 import kr.hhplus.be.server.domain.user.UserCouponService;
 import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.domain.user.UserCouponCommand;
 import kr.hhplus.be.server.support.lock.DistributedLock;
 import kr.hhplus.be.server.support.lock.LockStrategy;
 import kr.hhplus.be.server.support.lock.LockType;
@@ -14,6 +15,7 @@ import kr.hhplus.be.server.support.lock.LockType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -23,13 +25,27 @@ public class UserCouponFacade {
     private final CouponService couponService;
     private final UserCouponService userCouponService;
 
-    @Transactional
-    @DistributedLock(type = LockType.COUPON, key = "#criteria.couponId", strategy = LockStrategy.SPIN_LOCK)
-    public void publishUserCoupon(UserCouponCriteria.Publish criteria) {
-        userService.getUser(criteria.getUserId());
+    public void requestPublishUserCoupon(UserCouponCriteria.PublishRequest criteria) {
+        userCouponService.requestPublishUserCoupon(criteria.toCommand(LocalDateTime.now()));
+    }
 
-        couponService.publishCoupon(criteria.getCouponId());
-        userCouponService.createUserCoupon(criteria.toCommand());
+    @Transactional
+    public void publishUserCoupons(UserCouponCriteria.Publish criteria) {
+        CouponInfo.PublishableCoupons coupons = couponService.getPublishableCoupons();
+
+        coupons.getCoupons().stream()
+            .map(p -> criteria.toCommand(p.getCouponId(), p.getQuantity()))
+            .forEach(userCouponService::publishUserCoupons);
+    }
+
+    @Transactional
+    public void finishedPublishCoupons() {
+        CouponInfo.PublishableCoupons coupons = couponService.getPublishableCoupons();
+
+        coupons.getCoupons().stream()
+            .map(p -> UserCouponCommand.PublishFinish.of(p.getCouponId(), p.getQuantity()))
+            .filter(userCouponService::isPublishFinished)
+            .forEach(p -> couponService.finishCoupon(p.getCouponId()));
     }
 
     @Transactional(readOnly = true)

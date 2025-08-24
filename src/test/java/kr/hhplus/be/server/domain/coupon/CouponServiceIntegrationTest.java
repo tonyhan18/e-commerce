@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -143,5 +144,56 @@ class CouponServiceIntegrationTest {
         // then
         verify(couponRepository, times(1)).findById(couponId);
         verify(mockCoupon, times(1)).publish();
+    }
+
+    @DisplayName("발급 가능한 쿠폰 목록을 가져온다.")
+    @Test
+    void getPublishableCoupons() {
+        // given
+        List<Coupon> coupons = List.of(
+            Coupon.builder()
+                .name("쿠폰명")
+                .status(CouponStatus.PUBLISHABLE)
+                .discountRate(0.1)
+                .quantity(1)
+                .expiredAt(LocalDateTime.now().plusDays(1))
+                .build(),
+            Coupon.builder()
+                .name("쿠폰명2")
+                .status(CouponStatus.PUBLISHABLE)
+                .discountRate(0.1)
+                .quantity(10)
+                .expiredAt(LocalDateTime.now().plusDays(1))
+                .build()
+        );
+        coupons.forEach(couponRepository::save);
+
+        // when
+        CouponInfo.PublishableCoupons publishableCoupons = couponService.getPublishableCoupons();
+
+        // then
+        assertThat(publishableCoupons.getCoupons()).hasSize(2)
+            .extracting(CouponInfo.PublishableCoupon::getCouponId)
+            .containsExactlyInAnyOrder(coupons.get(0).getId(), coupons.get(1).getId());
+    }
+
+    @DisplayName("쿠폰 발급을 종료한다.")
+    @Test
+    void finishCoupon() {
+        // given
+        Coupon coupon = Coupon.builder()
+            .name("쿠폰명")
+            .status(CouponStatus.PUBLISHABLE)
+            .expiredAt(LocalDateTime.now().plusDays(1))
+            .quantity(1)
+            .build();
+        couponRepository.save(coupon);
+
+
+        // when
+        couponService.finishCoupon(coupon.getId());
+
+        // then
+        assertThat(coupon.getStatus()).isEqualTo(CouponStatus.FINISHED);
     }
 } 

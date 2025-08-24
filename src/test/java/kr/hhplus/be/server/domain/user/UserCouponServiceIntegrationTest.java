@@ -2,65 +2,34 @@ package kr.hhplus.be.server.domain.user;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.LongStream;
 
-import kr.hhplus.be.server.support.MockTestSupport;
+import static kr.hhplus.be.server.application.user.UserCouponConstant.MAX_PUBLISH_COUNT_PER_REQUEST;
+import kr.hhplus.be.server.support.IntegrationTestSupport;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
 
-class UserCouponServiceIntegrationTest extends MockTestSupport{
+@Transactional
+class UserCouponServiceIntegrationTest extends IntegrationTestSupport{
 
-    @InjectMocks
+    @Autowired
     private UserCouponService userCouponService;
 
-    @Mock
+    @Autowired
     private UserCouponRepository userCouponRepository;
 
-    @DisplayName("사용자 쿠폰을 생성한다.")
+    @DisplayName("사용자 쿠폰이 없으면, 사용 가능한 쿠폰을 가져올 수 없다.")
     @Test
-    void createUserCoupon() {
+    void getUsableCouponWhenNotFound() {
         // given
-        UserCouponCommand.Publish command = mock(UserCouponCommand.Publish.class);
-
-        // when
-        userCouponService.createUserCoupon(command);
-
-        // then
-        verify(userCouponRepository, times(1)).save(any(UserCoupon.class));
-    }
-
-    @DisplayName("사용자 쿠폰 생성 시, 여러개의 쿠폰을 발급 받을 수 없다.")
-    @Test
-    void createUserCouponCannotDuplicate() {
-        // given
-        UserCouponCommand.Publish command = mock(UserCouponCommand.Publish.class);
-        UserCoupon userCoupon = UserCoupon.create(1L, 1L);
-
-        when(userCouponRepository.findOptionalByUserIdAndCouponId(anyLong(), anyLong()))
-            .thenReturn(Optional.of(userCoupon));
-
-        // when
-        assertThatThrownBy(() -> userCouponService.createUserCoupon(command))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("이미 발급된 쿠폰입니다.");
-    }
-
-    @DisplayName("유효한 ID로 사용 가능한 쿠폰을 조회해야 한다.")
-    @Test
-    void getUsableCouponWithInvalidId() {
-        // given
-        UserCouponCommand.UsableCoupon command = mock(UserCouponCommand.UsableCoupon.class);
-
-        when(userCouponRepository.findByUserIdAndCouponId(anyLong(), anyLong()))
-            .thenThrow(new IllegalArgumentException("보유한 쿠폰을 찾을 수 없습니다."));
+        Long userId = 1L;
+        Long couponId = 1L;
+        UserCouponCommand.UsableCoupon command = UserCouponCommand.UsableCoupon.of(userId, couponId);
 
         // when & then
         assertThatThrownBy(() -> userCouponService.getUsableCoupon(command))
@@ -68,121 +37,238 @@ class UserCouponServiceIntegrationTest extends MockTestSupport{
             .hasMessage("보유한 쿠폰을 찾을 수 없습니다.");
     }
 
-    @DisplayName("사용 불가능한 쿠폰은 조회할 수 없다.")
+    @DisplayName("사용 가능한 상태가 아닌 쿠폰은 가져올 수 없다.")
     @Test
-    void getUsableCouponCannotUseCoupon() {
+    void getUsableCouponWhenCannotUse() {
         // given
-        UserCouponCommand.UsableCoupon command = mock(UserCouponCommand.UsableCoupon.class);
-
-        UserCoupon usedUserCoupon = UserCoupon.builder()
+        Long userId = 1L;
+        Long couponId = 1L;
+        UserCoupon userCoupon = UserCoupon.builder()
+            .userId(userId)
+            .couponId(couponId)
             .usedStatus(UserCouponUsedStatus.USED)
             .build();
+        userCouponRepository.save(userCoupon);
 
-        when(userCouponRepository.findByUserIdAndCouponId(anyLong(), anyLong()))
-            .thenReturn(usedUserCoupon);
+        UserCouponCommand.UsableCoupon command = UserCouponCommand.UsableCoupon.of(userId, couponId);
 
-        // when
+        // when & then
         assertThatThrownBy(() -> userCouponService.getUsableCoupon(command))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("사용할 수 없는 쿠폰입니다.");
     }
 
-    @DisplayName("사용 가능한 쿠폰을 조회한다.")
+    @DisplayName("사용 가능한 쿠폰을 가져온다.")
     @Test
     void getUsableCoupon() {
         // given
-        UserCouponCommand.UsableCoupon command = mock(UserCouponCommand.UsableCoupon.class);
+        Long userId = 1L;
+        Long couponId = 1L;
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
+        userCouponRepository.save(userCoupon);
 
-        UserCoupon userCoupon = UserCoupon.builder()
-            .id(1L)
-            .usedStatus(UserCouponUsedStatus.UNUSED)
-            .build();
-
-        when(userCouponRepository.findByUserIdAndCouponId(anyLong(), anyLong()))
-            .thenReturn(userCoupon);
+        UserCouponCommand.UsableCoupon command = UserCouponCommand.UsableCoupon.of(userId, couponId);
 
         // when
         UserCouponInfo.UsableCoupon usableCoupon = userCouponService.getUsableCoupon(command);
 
         // then
-        assertThat(usableCoupon.getUserCouponId()).isNotNull();
+        assertThat(usableCoupon.getUserCouponId()).isEqualTo(userCoupon.getId());
     }
 
-    @DisplayName("유효한 ID로 쿠폰을 사용할 수 있다.")
+    @DisplayName("보유하지 않는 쿠폰은 사용할 수 없다.")
     @Test
-    void useCouponWithInvalidId() {
+    void useUserCouponWhenNotFound() {
         // given
-        when(userCouponRepository.findById(anyLong()))
-            .thenThrow(new IllegalArgumentException("보유한 쿠폰을 찾을 수 없습니다."));
+        Long userCouponId = 1L;
 
         // when & then
-        assertThatThrownBy(() -> userCouponService.useUserCoupon(anyLong()))
+        assertThatThrownBy(() -> userCouponService.useUserCoupon(userCouponId))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("보유한 쿠폰을 찾을 수 없습니다.");
     }
 
-    @DisplayName("사용 불가능한 쿠폰은 사용할 수 없다.")
+    @DisplayName("사용할 수 없는 쿠폰은 사용할 수 없다.")
     @Test
-    void useCouponCannotUseCoupon() {
+    void useUserCouponWhenCannotUse() {
         // given
+        Long userId = 1L;
+        Long couponId = 1L;
         UserCoupon userCoupon = UserCoupon.builder()
+            .userId(userId)
+            .couponId(couponId)
             .usedStatus(UserCouponUsedStatus.USED)
             .build();
-
-        when(userCouponRepository.findById(anyLong()))
-            .thenReturn(userCoupon);
+        userCouponRepository.save(userCoupon);
 
         // when & then
-        assertThatThrownBy(() -> userCouponService.useUserCoupon(anyLong()))
+        assertThatThrownBy(() -> userCouponService.useUserCoupon(userCoupon.getId()))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("사용할 수 없는 쿠폰입니다.");
     }
 
-    @DisplayName("쿠폰을 사용한다.")
+    @DisplayName("사용 가능한 쿠폰을 사용한다.")
     @Test
-    void useCoupon() {
+    void useUserCoupon() {
         // given
-        UserCoupon userCoupon = UserCoupon.builder()
-            .id(1L)
-            .usedStatus(UserCouponUsedStatus.UNUSED)
-            .build();
-
-        when(userCouponRepository.findById(anyLong()))
-            .thenReturn(userCoupon);
+        Long userId = 1L;
+        Long couponId = 1L;
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId);
+        userCouponRepository.save(userCoupon);
 
         // when
-        userCouponService.useUserCoupon(1L);
+        userCouponService.useUserCoupon(userCoupon.getId());
 
         // then
-        assertThat(userCoupon.getUsedStatus()).isEqualTo(UserCouponUsedStatus.USED);
+        UserCoupon updatedUserCoupon = userCouponRepository.findById(userCoupon.getId());
+        assertThat(updatedUserCoupon.getUsedStatus()).isEqualTo(UserCouponUsedStatus.USED);
+        assertThat(updatedUserCoupon.getUsedAt()).isNotNull();
     }
 
-    @DisplayName("보유 쿠폰 목록을 가져온다.")
+    @DisplayName("사용자의 쿠폰을 가져온다.")
     @Test
     void getUserCoupons() {
         // given
-        List<UserCoupon> userCoupons = List.of(
-            UserCoupon.builder()
-                .id(1L)
-                .couponId(1L)
-                .issuedAt(LocalDateTime.of(2025, 4, 1, 12, 0))
-                .build(),
-            UserCoupon.builder()
-                .id(2L)
-                .couponId(2L)
-                .issuedAt(LocalDateTime.of(2025, 4, 1, 12, 0))
-                .build()
-        );
+        Long userId = 1L;
+        Long anotherUserId = 2L;
 
-        when(userCouponRepository.findByUserIdAndUsableStatusIn(anyLong(), anyList()))
-            .thenReturn(userCoupons);
+        UserCoupon userCoupon1 = UserCoupon.builder()
+            .userId(userId)
+            .couponId(1L)
+            .usedStatus(UserCouponUsedStatus.USED)
+            .build();
+
+        UserCoupon targetUserCoupon = UserCoupon.builder()
+            .userId(userId)
+            .couponId(2L)
+            .usedStatus(UserCouponUsedStatus.UNUSED)
+            .build();
+
+        UserCoupon userCoupon3 = UserCoupon.builder()
+            .userId(anotherUserId)
+            .couponId(3L)
+            .usedStatus(UserCouponUsedStatus.UNUSED)
+            .build();
+
+        List.of(userCoupon1, targetUserCoupon, userCoupon3).forEach(userCouponRepository::save);
+
 
         // when
-        UserCouponInfo.Coupons coupons = userCouponService.getUserCoupons(1L);
+        UserCouponInfo.Coupons coupons = userCouponService.getUserCoupons(userId);
 
         // then
-        assertThat(coupons.getCoupons()).hasSize(2)
-            .extracting("userCouponId")
-            .containsExactlyInAnyOrder(1L, 2L);
+        assertThat(coupons.getCoupons()).hasSize(1)
+            .extracting("userCouponId", "couponId")
+            .containsExactlyInAnyOrder(
+                tuple(targetUserCoupon.getId(), targetUserCoupon.getCouponId())
+            );
+    }
+
+    @DisplayName("중복된 요청을 보냈을 시, 쿠폰 발급 요청에 실패한다.")
+    @Test
+    void failedRequestPublishUserCoupon() {
+        // given
+        UserCouponCommand.PublishRequest command = UserCouponCommand.PublishRequest.of(1L, 1L, LocalDateTime.now());
+        userCouponRepository.save(command);
+
+        // when & then
+        assertThatThrownBy(() -> userCouponService.requestPublishUserCoupon(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("쿠폰 발급 요청에 실패했습니다.");
+    }
+
+    @DisplayName("쿠폰 발급 요청을 한다.")
+    @Test
+    void requestPublishUserCoupon() {
+        // given
+        UserCouponCommand.PublishRequest command = UserCouponCommand.PublishRequest.of(1L, 1L, LocalDateTime.now());
+
+        // when
+        boolean result = userCouponService.requestPublishUserCoupon(command);
+
+        // then
+        assertThat(result).isTrue();
+    }
+
+    @DisplayName("사용자 쿠폰을 발급한다.")
+    @Test
+    void publishUserCoupons() {
+        // given
+        long couponId = 1L;
+        UserCoupon userCoupon1 = UserCoupon.create(1L, couponId, LocalDateTime.now().minusDays(1));
+        UserCoupon userCoupon2 = UserCoupon.create(2L, couponId, LocalDateTime.now().minusDays(1));
+
+        userCouponRepository.saveAll(List.of(userCoupon1, userCoupon2));
+
+        LongStream.rangeClosed(1, 10)
+            .mapToObj(l -> UserCouponCommand.PublishRequest.of(l, couponId, LocalDateTime.now().plusSeconds(l)))
+            .forEach(userCouponService::requestPublishUserCoupon);
+
+        UserCouponCommand.Publish command = UserCouponCommand.Publish.of(couponId, 5, MAX_PUBLISH_COUNT_PER_REQUEST);
+
+        // when
+        userCouponService.publishUserCoupons(command);
+
+        // then
+        List<UserCoupon> coupons = userCouponRepository.findCouponId(couponId);
+        assertThat(coupons).hasSize(5)
+            .extracting("userId")
+            .containsExactly(1L, 2L, 3L, 4L, 5L);
+    }
+
+    @DisplayName("사용자 쿠폰 발급 시, 발급 수량이 최대 발급 개수를 초과하면 최대 발급 개수만큼 발급한다.")
+    @Test
+    void publishUserCouponExceedMaxPublishCountPerRequest() {
+        // given
+        long couponId = 1L;
+        UserCouponCommand.Publish command = UserCouponCommand.Publish.of(couponId, 1000, MAX_PUBLISH_COUNT_PER_REQUEST);
+
+        LongStream.rangeClosed(1, 1000)
+            .mapToObj(l -> UserCouponCommand.PublishRequest.of(l, couponId, LocalDateTime.now().plusSeconds(l)))
+            .forEach(userCouponService::requestPublishUserCoupon);
+
+        // when
+        userCouponService.publishUserCoupons(command);
+
+        // then
+        assertThat(userCouponRepository.countByCouponId(couponId)).isEqualTo(MAX_PUBLISH_COUNT_PER_REQUEST);
+    }
+
+    @DisplayName("발급 쿠폰 수가 남아 있으면 발급이 진행 중이다.")
+    @Test
+    void isNotPublishFinished() {
+        // given
+        long couponId = 1L;
+        UserCoupon userCoupon1 = UserCoupon.create(1L, couponId);
+        UserCoupon userCoupon2 = UserCoupon.create(2L, couponId);
+
+        userCouponRepository.saveAll(List.of(userCoupon1, userCoupon2));
+
+        UserCouponCommand.PublishFinish command = UserCouponCommand.PublishFinish.of(couponId, 5);
+
+        // when
+        boolean result = userCouponService.isPublishFinished(command);
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @DisplayName("발급 쿠폰 수가 모두 발급되면 발급이 완료된다.")
+    @Test
+    void isPublishFinished() {
+        // given
+        long couponId = 1L;
+        UserCoupon userCoupon1 = UserCoupon.create(1L, couponId);
+        UserCoupon userCoupon2 = UserCoupon.create(2L, couponId);
+
+        userCouponRepository.saveAll(List.of(userCoupon1, userCoupon2));
+
+        UserCouponCommand.PublishFinish command = UserCouponCommand.PublishFinish.of(couponId, 2);
+
+        // when
+        boolean result = userCouponService.isPublishFinished(command);
+
+        // then
+        assertThat(result).isTrue();
     }
 } 

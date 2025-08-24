@@ -45,3 +45,7 @@
 + [🔍 인덱스 분석](init-scripts/04-index-analysis.sql)
 + [⚡ 쿼리 성능 테스트](init-scripts/05-query-performance-test.sql)
 + [🚀 최적화된 인덱스](init-scripts/06-optimized-indexes.sql)
+
+
+## ⚒️ Redis 리팩토링
++ [✨ Redis기반 인기상품 조회 및 선착순 쿠폰 발급](docs/report/04.RedisDesignReport.md)

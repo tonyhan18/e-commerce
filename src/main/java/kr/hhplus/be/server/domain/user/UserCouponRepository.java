@@ -2,19 +2,25 @@ package kr.hhplus.be.server.domain.user;
 
 import org.springframework.stereotype.Repository;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface UserCouponRepository {
 
-    UserCoupon save(UserCoupon userCoupon);    
-
-    UserCoupon findById(Long userCouponId);
+    UserCoupon save(UserCoupon userCoupon);
 
     UserCoupon findByUserIdAndCouponId(Long userId, Long couponId);
 
+    UserCoupon findById(Long userCouponId);
+
     List<UserCoupon> findByUserIdAndUsableStatusIn(Long userId, List<UserCouponUsedStatus> statuses);
 
-    Optional<UserCoupon> findOptionalByUserIdAndCouponId(Long userId, Long couponId);
+    boolean save(UserCouponCommand.PublishRequest command);
 
+    int countByCouponId(Long couponId);
+
+    List<UserCouponInfo.Candidates> findPublishCandidates(UserCouponCommand.Candidates command);
+
+    void saveAll(List<UserCoupon> userCoupons);
+
+    List<UserCoupon> findCouponId(Long couponId);
 }

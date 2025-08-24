@@ -23,7 +23,7 @@ public enum PaymentStatus {
         return CANNOT_PAYABLE_STATUSES.contains(this);
     }
 
-    public static List<PaymentStatus> forCompleted() {
-        return List.of(COMPLETED);
-    }
+    // public static List<PaymentStatus> forCompleted() {
+    //     return List.of(COMPLETED);
+    // }
 }
