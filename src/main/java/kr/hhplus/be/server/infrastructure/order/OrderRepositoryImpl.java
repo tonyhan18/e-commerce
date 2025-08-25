@@ -12,7 +12,6 @@ public class OrderRepositoryImpl implements OrderRepository {
     
     private final OrderJpaRepository orderJpaRepository;
     private final OrderProductJpaRepository orderProductJpaRepository;
-    private final OrderQueryDslRepository orderQueryDslRepository;  
 
     @Override
     public Order save(Order order) {
@@ -28,11 +27,6 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public List<OrderProduct> findOrderIdsIn(List<Long> orderIds) {
         return orderProductJpaRepository.findByOrderIdIn(orderIds);
-    }
-
-    @Override
-    public List<OrderInfo.PaidProduct> findPaidProducts(OrderCommand.PaidProducts command) {
-        return orderQueryDslRepository.findPaidProducts(command);
     }
 
     @Override
