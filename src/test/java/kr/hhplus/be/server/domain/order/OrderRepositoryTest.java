@@ -1,82 +1,95 @@
 package kr.hhplus.be.server.domain.order;
 
-import org.junit.jupiter.api.BeforeEach;
+import kr.hhplus.be.server.support.IntegrationTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ExtendWith(MockitoExtension.class)
-class OrderRepositoryTest {
+@Transactional
+class OrderRepositoryTest extends IntegrationTestSupport {
 
-    @Mock
+    @Autowired
     private OrderRepository orderRepository;
 
-    private Order testOrder;
-
-    @BeforeEach
-    void setUp() {
-        // 테스트용 OrderProduct 생성
-        OrderProduct testOrderProduct = OrderProduct.builder()
-                .productId(1L)
-                .productName("테스트 상품")
-                .unitPrice(10000L)
-                .quantity(1)
-                .build();
-        
-        testOrder = Order.create(1L, null, 0.0, List.of(testOrderProduct));
-    }
-
+    @DisplayName("주문을 저장한다.")
     @Test
-    @DisplayName("주문 저장 - 성공")
-    void save_success() {
+    void save() {
         // given
-        when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
+        Order order = Order.create(1L, 1L, 0.1, List.of(
+            OrderProduct.create(1L, "상품명", 1_000L, 1)
+        ));
 
         // when
-        Order savedOrder = orderRepository.save(testOrder);
+        Order result = orderRepository.save(order);
 
         // then
-        assertThat(savedOrder).isNotNull();
-        verify(orderRepository, times(1)).save(testOrder);
+        assertThat(result.getId()).isNotNull();
+        assertThat(result.getUserId()).isEqualTo(1L);
+        assertThat(result.getUserCouponId()).isEqualTo(1L);
+        assertThat(result.getDiscountPrice()).isEqualTo(100L);
+        assertThat(result.getTotalPrice()).isEqualTo(900L);
+        assertThat(result.getOrderProducts()).hasSize(1);
     }
 
+    @DisplayName("주문이 존재하지 않으면, 주문 ID로 주문을 찾을 수 없다.")
     @Test
-    @DisplayName("주문 조회 - 성공")
-    void findById_success() {
+    void findByIdWhenDoseNotExist() {
         // given
         Long orderId = 1L;
-        when(orderRepository.findById(orderId)).thenReturn(testOrder);
 
-        // when
-        Order result = orderRepository.findById(orderId);
-
-        // then
-        assertThat(result).isNotNull();
-        verify(orderRepository, times(1)).findById(orderId);
+        // when & then
+        assertThatThrownBy(() -> orderRepository.findById(orderId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("주문이 존재하지 않습니다.");
     }
 
-
+    @DisplayName("주문 ID로 주문을 찾는다.")
     @Test
-    @DisplayName("주문 상품 목록 조회")
-    void findOrderIdsIn_success() {
+    void findById() {
         // given
-        List<Long> orderIds = List.of(1L, 2L);
-        List<OrderProduct> orderProducts = List.of();
-        when(orderRepository.findOrderIdsIn(orderIds)).thenReturn(orderProducts);
+        Order order = Order.create(1L, 1L, 0.1, List.of(
+            OrderProduct.create(1L, "상품명", 1_000L, 1)
+        ));
+        orderRepository.save(order);
+
+        // when
+        Order result = orderRepository.findById(order.getId());
+
+        // then
+        assertThat(result.getId()).isEqualTo(order.getId());
+        assertThat(result.getUserId()).isEqualTo(order.getUserId());
+        assertThat(result.getUserCouponId()).isEqualTo(order.getUserCouponId());
+        assertThat(result.getDiscountPrice()).isEqualTo(order.getDiscountPrice());
+        assertThat(result.getTotalPrice()).isEqualTo(order.getTotalPrice());
+    }
+
+    @DisplayName("주문 ID 리스트로 주문 상품을 찾는다.")
+    @Test
+    void findOrderIdsIn() {
+        // given
+        Order order1 = Order.create(1L, 1L, 0.1, List.of(
+            OrderProduct.create(1L, "상품명", 1_000L, 1)
+        ));
+        Order order2 = Order.create(2L, 1L, 0.1, List.of(
+            OrderProduct.create(2L, "상품명", 1_000L, 1)
+        ));
+        orderRepository.save(order1);
+        orderRepository.save(order2);
+
+        List<Long> orderIds = List.of(order1.getId(), order2.getId());
 
         // when
         List<OrderProduct> result = orderRepository.findOrderIdsIn(orderIds);
 
         // then
-        assertThat(result).isEmpty();
-        verify(orderRepository, times(1)).findOrderIdsIn(orderIds);
+        assertThat(result).hasSize(2)
+            .extracting(OrderProduct::getOrder)
+            .containsExactlyInAnyOrder(order1, order2);
     }
-} 
+}

@@ -4,6 +4,7 @@ import java.util.List;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class OrderService {
         return OrderInfo.Order.of(order.getId(), order.getTotalPrice(), order.getDiscountPrice());
     }
 
+    @Transactional
     public void paidOrder(Long orderId) {
         Order order = orderRepository.findById(orderId);
         order.paid(LocalDateTime.now());
