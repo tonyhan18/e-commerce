@@ -10,8 +10,6 @@ public interface OrderRepository {
 
     Order findById(Long id);
 
-    void sendOrderMessage(Order order);
-
     List<OrderProduct> findOrderIdsIn(List<Long> orderIds);
 
     // List<OrderInfo.PaidProduct> findPaidProducts(OrderCommand.PaidProducts command);

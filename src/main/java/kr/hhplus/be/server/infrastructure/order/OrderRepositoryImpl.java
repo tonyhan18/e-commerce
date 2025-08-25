@@ -28,10 +28,4 @@ public class OrderRepositoryImpl implements OrderRepository {
     public List<OrderProduct> findOrderIdsIn(List<Long> orderIds) {
         return orderProductJpaRepository.findByOrderIdIn(orderIds);
     }
-
-    @Override
-    public void sendOrderMessage(Order order) {
-        // TODO: 메시지 전송 로직 구현
-        // 현재는 구현하지 않음
-    }
 } 

@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final OrderExternalClient orderExternalClient;
+    private final OrderEventPublisher orderEventPublisher;
 
 
     public OrderInfo.Order createOrder(OrderCommand.Create command) {
@@ -34,7 +34,7 @@ public class OrderService {
     public void paidOrder(Long orderId) {
         Order order = orderRepository.findById(orderId);
         order.paid(LocalDateTime.now());
-        orderExternalClient.sendOrderMessage(order);
+        orderEventPublisher.paid(OrderEvent.Paid.of(order));
     }
 
     // public OrderInfo.PaidProducts getPaidProducts(OrderCommand.DateQuery command) {
