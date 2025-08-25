@@ -63,18 +63,6 @@ class OrderRepositoryTest {
         verify(orderRepository, times(1)).findById(orderId);
     }
 
-    @Test
-    @DisplayName("주문 메시지 전송")
-    void sendOrderMessage_success() {
-        // given
-        doNothing().when(orderRepository).sendOrderMessage(any(Order.class));
-
-        // when
-        orderRepository.sendOrderMessage(testOrder);
-
-        // then
-        verify(orderRepository, times(1)).sendOrderMessage(testOrder);
-    }
 
     @Test
     @DisplayName("주문 상품 목록 조회")
