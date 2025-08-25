@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.interfaces.orders;
+package kr.hhplus.be.server.interfaces.orders.api;
 
 import kr.hhplus.be.server.application.order.OrderCriteria;
 import lombok.AccessLevel;
