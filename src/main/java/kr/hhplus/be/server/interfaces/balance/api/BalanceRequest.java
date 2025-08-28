@@ -2,7 +2,7 @@ package kr.hhplus.be.server.interfaces.balance.api;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import kr.hhplus.be.server.application.balance.BalanceCriteria;
+import kr.hhplus.be.server.domain.balance.BalanceCommand;
 import lombok.NoArgsConstructor;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -25,8 +25,8 @@ public class BalanceRequest {
             return new Charge(amount);
         }
 
-        public BalanceCriteria.Charge toCriteria(Long userId) {
-            return BalanceCriteria.Charge.of(userId, amount);
+        public BalanceCommand.Charge toCommand(Long userId) {
+            return BalanceCommand.Charge.of(userId, amount);
         }
     }
 } 
