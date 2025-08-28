@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.infrastructure.balance;
+package kr.hhplus.be.server.infrastructure.balance.repository;
 
 import kr.hhplus.be.server.domain.balance.Balance;
 import kr.hhplus.be.server.domain.balance.BalanceRepository;

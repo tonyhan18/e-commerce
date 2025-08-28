@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.infrastructure.balance.BalanceTransactionalJpaRepository;
+import kr.hhplus.be.server.infrastructure.balance.repository.BalanceTransactionalJpaRepository;
 import kr.hhplus.be.server.support.IntegrationTestSupport;
 
 import java.util.List;

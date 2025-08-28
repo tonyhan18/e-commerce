@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.interfaces.balance;
+package kr.hhplus.be.server.interfaces.balance.api;
 
 import kr.hhplus.be.server.application.balance.BalanceResult;
 import lombok.NoArgsConstructor;

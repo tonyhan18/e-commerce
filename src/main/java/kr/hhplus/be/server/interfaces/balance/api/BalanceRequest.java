@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.interfaces.balance;
+package kr.hhplus.be.server.interfaces.balance.api;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

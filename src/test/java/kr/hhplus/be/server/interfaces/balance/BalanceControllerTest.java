@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.interfaces.balance;
 
 import kr.hhplus.be.server.application.balance.BalanceResult;
+import kr.hhplus.be.server.interfaces.balance.api.BalanceRequest;
 import kr.hhplus.be.server.support.ControllerTestSupport;
 
 import org.junit.jupiter.api.DisplayName;

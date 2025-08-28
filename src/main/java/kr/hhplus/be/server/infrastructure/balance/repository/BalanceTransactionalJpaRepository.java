@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.infrastructure.balance;
+package kr.hhplus.be.server.infrastructure.balance.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
