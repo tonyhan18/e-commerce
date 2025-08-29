@@ -8,8 +8,10 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import kr.hhplus.be.server.domain.rank.RankConstant;
 import kr.hhplus.be.server.domain.rank.RankCommand;
 import kr.hhplus.be.server.domain.rank.RankService;
+import kr.hhplus.be.server.support.cache.CacheType;
 
 @Slf4j
 @Component
