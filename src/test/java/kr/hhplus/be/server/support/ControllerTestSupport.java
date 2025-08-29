@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import kr.hhplus.be.server.domain.balance.BalanceService;
 import kr.hhplus.be.server.application.order.OrderFacade;
-import kr.hhplus.be.server.application.product.ProductFacade;
+import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.application.rank.RankFacade;
 import kr.hhplus.be.server.application.user.UserCouponFacade;
 import kr.hhplus.be.server.interfaces.balance.api.BalanceController;
@@ -39,7 +39,7 @@ public abstract class ControllerTestSupport {
     protected OrderFacade orderFacade;
 
     @MockitoBean
-    protected ProductFacade productFacade;
+    protected ProductService productService;
 
     @MockitoBean
     protected RankFacade rankFacade;

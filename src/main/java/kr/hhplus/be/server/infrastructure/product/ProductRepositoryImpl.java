@@ -12,6 +12,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     private final ProductJpaRepository productJpaRepository;
 
+    private final ProductQueryDslRepository productQueryDslRepository;
     @Override
     public Product save(Product product) {
         return productJpaRepository.save(product);
@@ -24,7 +25,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<Product> findSellingStatusIn(List<ProductSellingStatus> sellStatuses) {
-        return productJpaRepository.findBySellStatusIn(sellStatuses);
+    public List<ProductInfo.Product> findSellingStatusIn(List<ProductSellingStatus> sellStatuses) {
+        return productQueryDslRepository.findBySellStatusIn(sellStatuses);
     }
 } 
