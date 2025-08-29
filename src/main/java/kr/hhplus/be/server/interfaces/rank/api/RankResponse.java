@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.interfaces.rank;
+package kr.hhplus.be.server.interfaces.rank.api;
 
 import kr.hhplus.be.server.application.rank.RankResult;
 import lombok.AccessLevel;

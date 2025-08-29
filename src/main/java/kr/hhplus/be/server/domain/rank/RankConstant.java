@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.rank;
+package kr.hhplus.be.server.domain.rank;
 
 public class RankConstant {
 
