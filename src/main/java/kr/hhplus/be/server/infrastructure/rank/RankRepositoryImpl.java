@@ -14,6 +14,7 @@ public class RankRepositoryImpl implements RankRepository {
     private final RankJpaRepository rankJpaRepository;
     private final RankRedisRepository rankRedisRepository;
     private final RankJdbcTemplateRepository rankJdbcTemplateRepository;
+    private final ProductJpaRepository productJpaRepository;
 
     @Override
     public Rank save(Rank rank) {
@@ -43,5 +44,11 @@ public class RankRepositoryImpl implements RankRepository {
     @Override
     public boolean delete(RankKey key) {
         return rankRedisRepository.delete(key);
+    }
+
+    @Override
+    public Product findProductById(Long productId) {
+        return productJpaRepository.findById(productId)
+            .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
     }
 }

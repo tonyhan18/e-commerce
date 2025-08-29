@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import kr.hhplus.be.server.application.product.ProductResult;
+import kr.hhplus.be.server.domain.product.ProductInfo;
 import lombok.Builder;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,7 +20,7 @@ public class ProductResponse {
             this.products = products;
         }
 
-        public static Products of(ProductResult.Products products) {
+        public static Products of(ProductInfo.Products products) {
             return new Products(products.getProducts().stream()
                 .map(Product::of)
                 .toList());
@@ -44,7 +44,7 @@ public class ProductResponse {
             this.stock = stock;
         }
 
-        public static Product of(ProductResult.Product product) {
+        public static Product of(ProductInfo.Product product) {
             return Product.builder()
                 .id(product.getProductId())
                 .name(product.getProductName())

@@ -75,6 +75,14 @@ public class Balance {
         //addUseTransaction(amount);
     }
 
+    public void refund(Long amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("환불 금액은 0보다 커야 합니다.");
+        }
+
+        this.balance += amount;
+    }
+
     // private void addChargeTransaction(Long amount) {
     //     BalanceTransaction balanceTransaction = BalanceTransaction.ofCharge(this, amount);
     //     this.balanceTransactions.add(balanceTransaction);

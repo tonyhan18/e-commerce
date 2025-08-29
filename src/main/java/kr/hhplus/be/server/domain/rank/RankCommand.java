@@ -61,20 +61,24 @@ public class RankCommand {
     }
 
     @Getter
-    public static class PopularSellRank {
+    public static class PopularProducts {
 
         private final int top;
         private final int days;
         private final LocalDate date;
 
-        private PopularSellRank(int top, int days, LocalDate date) {
+        private PopularProducts(int top, int days, LocalDate date) {
             this.top = top;
             this.days = days;
             this.date = date;
         }
 
-        public static PopularSellRank of(int top, int days, LocalDate date) {
-            return new PopularSellRank(top, days, date);
+        public static PopularProducts of(int top, int days, LocalDate date) {
+            return new PopularProducts(top, days, date);
+        }
+
+        public static PopularProducts ofTop5Days3(LocalDate date) {
+            return new PopularProducts(RankConstant.TOP_5, RankConstant.DAYS_3, date);
         }
     }
 }

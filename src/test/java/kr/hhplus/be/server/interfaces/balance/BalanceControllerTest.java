@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.interfaces.balance;
 
-import kr.hhplus.be.server.application.balance.BalanceResult;
+import kr.hhplus.be.server.domain.balance.BalanceResult;
+import kr.hhplus.be.server.interfaces.balance.api.BalanceRequest;
 import kr.hhplus.be.server.support.ControllerTestSupport;
 
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +21,7 @@ class BalanceControllerTest extends ControllerTestSupport{
     @Test
     void getBalance() throws Exception {
         // given
-        when(balanceFacade.getBalance(1L))
+        when(balanceService.getBalance(1L))
             .thenReturn(BalanceResult.Balance.of(1_000L));
 
         // when & then

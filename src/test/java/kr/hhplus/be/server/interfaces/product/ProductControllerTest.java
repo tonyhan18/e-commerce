@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.interfaces.product;
 
-import kr.hhplus.be.server.application.product.ProductFacade;
-import kr.hhplus.be.server.application.product.ProductResult;
+import kr.hhplus.be.server.domain.product.ProductInfo;
+import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.interfaces.products.ProductController;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ProductControllerTest {
 
     @Mock
-    private ProductFacade productFacade;
+    private ProductService productService;
 
     @InjectMocks
     private ProductController productController;
@@ -37,12 +37,12 @@ class ProductControllerTest {
     @DisplayName("getProducts API는 정상적으로 동작한다.")
     void getProducts() throws Exception {
         // given
-        ProductResult.Products products = mock(ProductResult.Products.class);
-        when(productFacade.getProducts()).thenReturn(products);
+        ProductInfo.Products products = mock(ProductInfo.Products.class);
+        when(productService.getSellingProducts()).thenReturn(products);
 
         // when & then
         mockMvc.perform(get("/api/v1/products"))
                 .andExpect(status().isOk());
-        verify(productFacade, times(1)).getProducts();
+        verify(productService, times(1)).getSellingProducts();
     }
 } 

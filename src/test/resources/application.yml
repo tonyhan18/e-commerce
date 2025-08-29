@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: hhplus
+  profiles:
+    active: test
+  datasource:
+    name: HangHaePlusDataSource
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 3
+      connection-timeout: 10000
+      max-lifetime: 60000
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/hhplus?characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+    username: application
+    password: application
+  jpa:
+    open-in-view: false
+    generate-ddl: false
+    show-sql: false
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate.timezone.default_storage: NORMALIZE_UTC
+      hibernate.jdbc.time_zone: UTC
+      hibernate:
+        format_sql: true
+        show_sql: true
+        use_sql_comments: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 1000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+logging:
+  level:
+    kr.hhplus.be.server: DEBUG
+    org.springframework.data.redis: DEBUG
