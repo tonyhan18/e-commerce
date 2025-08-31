@@ -13,12 +13,12 @@ class CouponKeyTest {
     @Test
     void of() {
         // given
-        CouponKey userCouponKey = CouponKey.of(1L);
+        CouponKey couponKey = CouponKey.of(1L);
 
         // when
-        String key = userCouponKey.generate();
+        String key = couponKey.generate();
 
         // then
-        assertThat(key).isEqualTo("user_coupon:1");
+        assertThat(key).isEqualTo("coupon:1");
     }
 }
