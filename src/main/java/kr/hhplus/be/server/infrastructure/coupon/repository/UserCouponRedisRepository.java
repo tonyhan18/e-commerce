@@ -1,8 +1,8 @@
-package kr.hhplus.be.server.infrastructure.user;
+package kr.hhplus.be.server.infrastructure.coupon.repository;
 
-import kr.hhplus.be.server.domain.user.UserCouponCommand;
+import kr.hhplus.be.server.domain.coupon.CouponCommand;
+import kr.hhplus.be.server.domain.coupon.CouponKey;
 import kr.hhplus.be.server.domain.user.UserCouponInfo;
-import kr.hhplus.be.server.domain.user.UserCouponKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
@@ -21,15 +21,15 @@ public class UserCouponRedisRepository {
 
     private final RedisTemplate<String, Long> redisTemplate;
 
-    public boolean save(UserCouponCommand.PublishRequest command) {
-        UserCouponKey key = UserCouponKey.of(command.getCouponId());
+    public boolean save(CouponCommand.PublishRequest command) {
+        CouponKey key = CouponKey.of(command.getCouponId());
         long score = command.getIssuedAt().toEpochSecond(ZoneOffset.UTC);
 
         return Boolean.TRUE.equals(redisTemplate.opsForZSet().addIfAbsent(key.generate(), command.getUserId(), score));
     }
 
-    public List<UserCouponInfo.Candidates> findPublishCandidates(UserCouponCommand.Candidates command) {
-        UserCouponKey key = UserCouponKey.of(command.getCouponId());
+    public List<UserCouponInfo.Candidates> findPublishCandidates(CouponCommand.Candidates command) {
+        CouponKey key = CouponKey.of(command.getCouponId());
 
         Set<TypedTuple<Long>> tuples = redisTemplate.opsForZSet().rangeWithScores(key.generate(), command.getStart(), command.getEnd() - 1);
 

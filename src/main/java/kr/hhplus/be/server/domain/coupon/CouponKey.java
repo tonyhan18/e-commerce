@@ -1,20 +1,20 @@
-package kr.hhplus.be.server.domain.user;
+package kr.hhplus.be.server.domain.coupon;
 
 import java.util.List;
 
 import kr.hhplus.be.server.support.key.KeyGeneratable;
 import kr.hhplus.be.server.support.key.KeyType;
 
-public class UserCouponKey implements KeyGeneratable{
+public class CouponKey implements KeyGeneratable{
 
     private final Long couponId;
 
-    private UserCouponKey(Long couponId) {
+    private CouponKey(Long couponId) {
         this.couponId = couponId;
     }
 
-    public static UserCouponKey of(Long couponId) {
-        return new UserCouponKey(couponId);
+    public static CouponKey of(Long couponId) {
+        return new CouponKey(couponId);
     }
 
     @Override

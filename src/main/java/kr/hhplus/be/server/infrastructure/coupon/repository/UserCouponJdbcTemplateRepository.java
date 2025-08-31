@@ -1,15 +1,16 @@
-package kr.hhplus.be.server.infrastructure.user;
+package kr.hhplus.be.server.infrastructure.coupon.repository;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 
-import kr.hhplus.be.server.domain.user.UserCoupon;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
+import kr.hhplus.be.server.domain.coupon.UserCoupon;
 
 @Repository
 @RequiredArgsConstructor

@@ -1,16 +1,16 @@
-package kr.hhplus.be.server.interfaces.user;
+package kr.hhplus.be.server.interfaces.coupon.api;
 
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-import kr.hhplus.be.server.application.user.UserCouponResult;
+import kr.hhplus.be.server.domain.coupon.CouponInfo;
 import lombok.AccessLevel;
 import lombok.Getter;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserCouponResponse {
+public class CouponResponse {
     
     @Getter
     @NoArgsConstructor
@@ -22,7 +22,7 @@ public class UserCouponResponse {
             this.coupons = coupons;
         }
 
-        public static Coupons of(UserCouponResult.Coupons coupons) {
+        public static Coupons of(CouponInfo.Coupons coupons) {
             return new Coupons(coupons.getCoupons().stream()
                 .map(Coupon::of)
                 .toList());
@@ -43,7 +43,7 @@ public class UserCouponResponse {
             this.discountRate = discountRate;
         }
 
-        public static Coupon of(UserCouponResult.Coupon coupon) {
+        public static Coupon of(CouponInfo.Coupon coupon) {
             return Coupon.builder()
                 .id(coupon.getUserCouponId())
                 .name(coupon.getCouponName())

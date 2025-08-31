@@ -1,7 +1,10 @@
-package kr.hhplus.be.server.domain.user;
+package kr.hhplus.be.server.domain.coupon;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import kr.hhplus.be.server.domain.coupon.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.UserCouponUsedStatus;
 
 import java.time.LocalDateTime;
 

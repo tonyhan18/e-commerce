@@ -11,16 +11,16 @@ import kr.hhplus.be.server.domain.balance.BalanceService;
 import kr.hhplus.be.server.application.order.OrderFacade;
 import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.domain.rank.RankService;
-import kr.hhplus.be.server.application.user.UserCouponFacade;
+import kr.hhplus.be.server.domain.coupon.CouponService;
 import kr.hhplus.be.server.interfaces.balance.api.BalanceController;
+import kr.hhplus.be.server.interfaces.coupon.api.CouponController;
 import kr.hhplus.be.server.interfaces.orders.api.OrderController;
 import kr.hhplus.be.server.interfaces.products.ProductController;
 import kr.hhplus.be.server.interfaces.rank.api.RankController;
-import kr.hhplus.be.server.interfaces.user.UserCouponController;
 
 @WebMvcTest(controllers = {
     BalanceController.class,
-    UserCouponController.class,
+    CouponController.class,
     OrderController.class,
     ProductController.class,
     RankController.class,
@@ -45,5 +45,5 @@ public abstract class ControllerTestSupport {
     protected RankService rankService;
 
     @MockitoBean
-    protected UserCouponFacade userCouponFacade;
+    protected CouponService couponService;
 }

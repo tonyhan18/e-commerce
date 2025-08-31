@@ -1,13 +1,13 @@
 package kr.hhplus.be.server.application.order;
 
 import kr.hhplus.be.server.domain.balance.BalanceCommand;
+import kr.hhplus.be.server.domain.coupon.CouponCommand;
 import kr.hhplus.be.server.domain.order.OrderCommand;
 import kr.hhplus.be.server.domain.order.OrderInfo;
 import kr.hhplus.be.server.domain.payment.PaymentCommand;
 import kr.hhplus.be.server.domain.product.ProductCommand;
 import kr.hhplus.be.server.domain.product.ProductInfo;
 import kr.hhplus.be.server.domain.stock.StockCommand;
-import kr.hhplus.be.server.domain.user.UserCouponCommand;
 import kr.hhplus.be.server.domain.rank.RankCommand;
 
 import lombok.AccessLevel;
@@ -57,8 +57,8 @@ public class OrderCriteria {
             return OrderCommand.Create.of(userId, orderProducts, userCouponId, discountRate);
         }
 
-        public UserCouponCommand.UsableCoupon toCouponCommand() {
-            return UserCouponCommand.UsableCoupon.of(userId, userCouponId);
+        public CouponCommand.UsableCoupon toCouponCommand() {
+            return CouponCommand.UsableCoupon.of(userId, userCouponId);
         }
 
         public BalanceCommand.Use toBalanceCommand(long totalPrice) {

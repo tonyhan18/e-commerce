@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.infrastructure.coupon;
+package kr.hhplus.be.server.infrastructure.coupon.repository;
 
 import java.util.List;
 import java.util.Optional;

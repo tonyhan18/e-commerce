@@ -1,9 +1,10 @@
-package kr.hhplus.be.server.infrastructure.user;
+package kr.hhplus.be.server.infrastructure.coupon.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import kr.hhplus.be.server.domain.user.UserCoupon;
-import kr.hhplus.be.server.domain.user.UserCouponUsedStatus;
+import kr.hhplus.be.server.domain.coupon.UserCoupon;
+import kr.hhplus.be.server.domain.coupon.UserCouponUsedStatus;
+
 import java.util.List;
 import java.util.Optional;
 

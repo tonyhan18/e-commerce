@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.domain.user;
+package kr.hhplus.be.server.domain.coupon;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -59,6 +59,15 @@ public class UserCoupon {
 
         this.usedStatus = UserCouponUsedStatus.USED;
         this.usedAt = LocalDateTime.now();
+    }
+
+    public void cancel() {
+        if (!cannotUse()) {
+            throw new IllegalStateException("사용할 수 있는 쿠폰을 취소할 수는 없습니다.");
+        }
+
+        this.usedStatus = UserCouponUsedStatus.UNUSED;
+        this.usedAt = null;
     }
 
     public boolean cannotUse() {
