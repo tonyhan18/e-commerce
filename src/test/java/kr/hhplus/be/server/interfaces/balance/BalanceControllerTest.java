@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.interfaces.balance;
 
-import kr.hhplus.be.server.domain.balance.BalanceResult;
+import kr.hhplus.be.server.domain.balance.BalanceInfo;
 import kr.hhplus.be.server.interfaces.balance.api.BalanceRequest;
 import kr.hhplus.be.server.support.ControllerTestSupport;
 
@@ -22,7 +22,7 @@ class BalanceControllerTest extends ControllerTestSupport{
     void getBalance() throws Exception {
         // given
         when(balanceService.getBalance(1L))
-            .thenReturn(BalanceResult.Balance.of(1_000L));
+            .thenReturn(BalanceInfo.Balance.of(1_000L));
 
         // when & then
         mockMvc.perform(

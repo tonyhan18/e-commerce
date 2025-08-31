@@ -11,6 +11,7 @@ public class BalanceService {
     private final BalanceRepository balanceRepository;
     private static final Long EMPTY_BALANCE_AMOUNT = 0L;
 
+    @Transactional(readOnly = true)
     public BalanceInfo.Balance getBalance(Long userId) {
         Long balance = balanceRepository.findOptionalByUserId(userId)
             .map(Balance::getBalance)
