@@ -12,7 +12,6 @@ public class OrderRepositoryImpl implements OrderRepository {
     
     private final OrderJpaRepository orderJpaRepository;
     private final OrderProductJpaRepository orderProductJpaRepository;
-    private final OrderQueryDslRepository orderQueryDslRepository;  
 
     @Override
     public Order save(Order order) {
@@ -28,16 +27,5 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public List<OrderProduct> findOrderIdsIn(List<Long> orderIds) {
         return orderProductJpaRepository.findByOrderIdIn(orderIds);
-    }
-
-    @Override
-    public List<OrderInfo.PaidProduct> findPaidProducts(OrderCommand.PaidProducts command) {
-        return orderQueryDslRepository.findPaidProducts(command);
-    }
-
-    @Override
-    public void sendOrderMessage(Order order) {
-        // TODO: 메시지 전송 로직 구현
-        // 현재는 구현하지 않음
     }
 } 

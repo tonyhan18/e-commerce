@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OrderCommand {
 
@@ -62,37 +61,37 @@ public class OrderCommand {
         }
     }
 
-    @Getter
-    public static class DateQuery {
+    // @Getter
+    // public static class DateQuery {
 
-        private final LocalDate date;
+    //     private final LocalDate date;
 
-        private DateQuery(LocalDate date) {
-            this.date = date;
-        }
+    //     private DateQuery(LocalDate date) {
+    //         this.date = date;
+    //     }
 
-        public static DateQuery of(LocalDate date) {
-            return new DateQuery(date);
-        }
+    //     public static DateQuery of(LocalDate date) {
+    //         return new DateQuery(date);
+    //     }
 
-        public PaidProducts toPaidProductsQuery(OrderStatus orderStatus) {
-            return PaidProducts.of(date, orderStatus);
-        }
-    }
+    //     public PaidProducts toPaidProductsQuery(OrderStatus orderStatus) {
+    //         return PaidProducts.of(date, orderStatus);
+    //     }
+    // }
 
-    @Getter
-    public static class PaidProducts {
+    // @Getter
+    // public static class PaidProducts {
 
-        private final LocalDate paidAt;
-        private final OrderStatus status;
+    //     private final LocalDate paidAt;
+    //     private final OrderStatus status;
 
-        private PaidProducts(LocalDate paidAt, OrderStatus status) {
-            this.paidAt = paidAt;
-            this.status = status;
-        }
+    //     private PaidProducts(LocalDate paidAt, OrderStatus status) {
+    //         this.paidAt = paidAt;
+    //         this.status = status;
+    //     }
 
-        public static PaidProducts of(LocalDate paidAt, OrderStatus status) {
-            return new PaidProducts(paidAt, status);
-        }
-    }
+    //     public static PaidProducts of(LocalDate paidAt, OrderStatus status) {
+    //         return new PaidProducts(paidAt, status);
+    //     }
+    // }
 }
