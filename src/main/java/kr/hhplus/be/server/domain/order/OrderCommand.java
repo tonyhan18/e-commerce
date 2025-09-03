@@ -13,24 +13,21 @@ public class OrderCommand {
     public static class Create {
 
         private final Long userId;
+        private final Long userCouponId;
         private final List<OrderProduct> products;
-        private final Double discountRate;
-        private final Long UserCouponId;
 
         @Builder
-        private Create(Long userId, List<OrderProduct> products, Long userCouponId, Double discountRate) {
+        private Create(Long userId, Long userCouponId, List<OrderProduct> products) {
             this.userId = userId;
+            this.userCouponId = userCouponId;
             this.products = products;
-            this.UserCouponId = userCouponId;
-            this.discountRate = discountRate;
         }
 
-        public static Create of(Long userId, List<OrderProduct> products, Long userCouponId, Double discountRate) {
+        public static Create of(Long userId, Long userCouponId, List<OrderProduct> products) {
             return Create.builder()
                 .userId(userId)
-                .products(products)
                 .userCouponId(userCouponId)
-                .discountRate(discountRate)
+                .products(products)
                 .build();
         }
     }
@@ -39,59 +36,58 @@ public class OrderCommand {
     public static class OrderProduct {
 
         private final Long productId;
-        private final String productName;
-        private final Long productPrice;
         private final int quantity;
 
         @Builder
-        private OrderProduct(Long productId, String productName, Long productPrice, int quantity) {
+        private OrderProduct(Long productId, int quantity) {
             this.productId = productId;
-            this.productName = productName;
-            this.productPrice = productPrice;
             this.quantity = quantity;
         }
 
-        public static OrderProduct of(Long productId, String productName, Long productPrice, int quantity) {
+        public static OrderProduct of(Long productId, int quantity) {
             return OrderProduct.builder()
                 .productId(productId)
-                .productName(productName)
-                .productPrice(productPrice)
                 .quantity(quantity)
                 .build();
         }
     }
 
-    // @Getter
-    // public static class DateQuery {
+    @Getter
+    public static class Process {
 
-    //     private final LocalDate date;
+        private final Long orderId;
+        private final OrderProcessTask process;
+        private final OrderProcessStatus status;
 
-    //     private DateQuery(LocalDate date) {
-    //         this.date = date;
-    //     }
+        @Builder
+        private Process(Long orderId, OrderProcessTask process, OrderProcessStatus status) {
+            this.orderId = orderId;
+            this.process = process;
+            this.status = status;
+        }
 
-    //     public static DateQuery of(LocalDate date) {
-    //         return new DateQuery(date);
-    //     }
+        public static Process ofCouponUsed(Long orderId, OrderProcessStatus status) {
+            return Process.builder()
+                .orderId(orderId)
+                .process(OrderProcessTask.COUPON_USED)
+                .status(status)
+                .build();
+        }
 
-    //     public PaidProducts toPaidProductsQuery(OrderStatus orderStatus) {
-    //         return PaidProducts.of(date, orderStatus);
-    //     }
-    // }
+        public static Process ofUsedBalance(Long orderId, OrderProcessStatus status) {
+            return Process.builder()
+                .orderId(orderId)
+                .process(OrderProcessTask.BALANCE_USED)
+                .status(status)
+                .build();
+        }
 
-    // @Getter
-    // public static class PaidProducts {
-
-    //     private final LocalDate paidAt;
-    //     private final OrderStatus status;
-
-    //     private PaidProducts(LocalDate paidAt, OrderStatus status) {
-    //         this.paidAt = paidAt;
-    //         this.status = status;
-    //     }
-
-    //     public static PaidProducts of(LocalDate paidAt, OrderStatus status) {
-    //         return new PaidProducts(paidAt, status);
-    //     }
-    // }
+        public static Process ofStockDeducted(Long orderId, OrderProcessStatus status) {
+            return Process.builder()
+                .orderId(orderId)
+                .process(OrderProcessTask.STOCK_DEDUCTED)
+                .status(status)
+                .build();
+        }
+    }
 }

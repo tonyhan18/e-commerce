@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.infrastructure.order;
+package kr.hhplus.be.server.infrastructure.order.repository;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.infrastructure.order;
+package kr.hhplus.be.server.infrastructure.order.event;
 
 import kr.hhplus.be.server.domain.order.OrderEvent;
 import kr.hhplus.be.server.domain.order.OrderEventPublisher;
