@@ -10,29 +10,29 @@ import lombok.RequiredArgsConstructor;
 public class StockService {
     private final StockRepository stockRepository;
 
+    @Transactional(readOnly = true)
     public StockInfo.Stock getStock(Long productId) {
         Stock stock = stockRepository.findByProductId(productId);
-        if (stock.isEmpty()) {
-            throw new IllegalArgumentException("재고가 없습니다.");
-        }
-        return StockInfo.Stock.of(stock.getProductId(), stock.getQuantity());
+        return StockInfo.Stock.of(stock.getId(), stock.getQuantity());
     }
 
     @Transactional
-    public void deductStock(StockCommand.OrderProducts command) {
+    public void deductStock(StockCommand.Deduct command) {
         command.getProducts().forEach(this::deductStock);
+    }
+
+    @Transactional
+    public void restoreStock(StockCommand.Restore command) {
+        command.getProducts().forEach(this::restoreStock);
     }
 
     private void deductStock(StockCommand.OrderProduct command) {
         Stock stock = stockRepository.findByProductIdWithLock(command.getProductId());
-        stock.deductQuantity(command.getQuantity());
+        stock.deduct(command.getQuantity());
     }
 
-    public void addStock(StockCommand.OrderProducts orderProducts) {
-        orderProducts.getProducts().forEach(product -> {
-            Stock stock = stockRepository.findByProductId(product.getProductId());
-            stock.addQuantity(product.getQuantity());
-        });
+    private void restoreStock(StockCommand.OrderProduct command) {
+        Stock stock = stockRepository.findByProductIdWithLock(command.getProductId());
+        stock.restore(command.getQuantity());
     }
-        
 }

@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.interfaces.orders.api;
 
-import kr.hhplus.be.server.application.order.OrderCriteria;
+import kr.hhplus.be.server.domain.order.OrderCommand;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,34 +13,33 @@ import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OrderRequest {
-
     @Getter
     @NoArgsConstructor
     public static class OrderPayment {
 
         @NotNull(message = "사용자 ID는 필수 입니다.")
         private Long userId;
-
         private Long userCouponId;
 
         @Valid
         @NotEmpty(message = "상품 목록은 1개 이상이여야 합니다.")
         private List<OrderProduct> products;
 
-        private OrderPayment(Long userId, List<OrderProduct> products, Long userCouponId) {
+        private OrderPayment(Long userId, Long userCouponId, List<OrderProduct> products) {
             this.userId = userId;
-            this.products = products;
             this.userCouponId = userCouponId;
+            this.products = products;
         }
 
-        public static OrderPayment of(Long userId, List<OrderProduct> products, Long userCouponId) {
-            return new OrderPayment(userId, products, userCouponId);
+        public static OrderPayment of(Long userId, Long couponId, List<OrderProduct> products) {
+            return new OrderPayment(userId, couponId, products);
         }
 
-        public OrderCriteria.OrderPayment toCriteria() {
-            return OrderCriteria.OrderPayment.of(userId, products.stream()
-                    .map(OrderProduct::toCriteria)
-                    .toList(), userCouponId);
+        public OrderCommand.Create toCommand() {
+            return OrderCommand.Create.of(userId, userCouponId, products.stream()
+                .map(r -> OrderCommand.OrderProduct.of(r.getId(), r.getQuantity()))
+                .toList()
+            );
         }
     }
 
@@ -63,10 +62,5 @@ public class OrderRequest {
         public static OrderProduct of(Long id, Integer quantity) {
             return new OrderProduct(id, quantity);
         }
-
-        public OrderCriteria.OrderProduct toCriteria() {
-            return OrderCriteria.OrderProduct.of(id, quantity);
-        }
     }
-
 }

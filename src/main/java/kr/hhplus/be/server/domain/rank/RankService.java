@@ -1,5 +1,10 @@
 package kr.hhplus.be.server.domain.rank;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
+
+import kr.hhplus.be.server.domain.product.Product;
+import kr.hhplus.be.server.support.cache.CacheType;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +26,13 @@ public class RankService {
             .toList();
     }
 
-    public RankInfo.PopularProducts getPopularSellRank(RankCommand.PopularSellRank command) {
+    @Transactional(readOnly = true)
+    @Cacheable(value = CacheType.CacheName.POPULAR_PRODUCT, key = "'top:' + #command.top + ':days:' + #command.days")
+    public RankInfo.PopularProducts cachedPopularProducts(RankCommand.PopularProducts command) {
+        return getPopularProducts(command);
+    }
+
+    public RankInfo.PopularProducts getPopularProducts(RankCommand.PopularProducts command) {
         RankKey target = RankKey.ofDays(RankType.SELL, command.getDays());
         RankKeys sources = RankKeys.ofDaysWithDate(RankType.SELL, command.getDays(), command.getDate());
 
@@ -31,16 +42,17 @@ public class RankService {
         return RankInfo.PopularProducts.of(popularProducts);
     }
 
+    @Transactional
     public void persistDailyRank(LocalDate date) {
         RankKey key = RankKey.ofDate(RankType.SELL, date);
-        List<RankInfo.PopularProduct> popularProducts = rankRepository.findDailyRank(key);
+        List<RankInfo.ProductScore> productScores = rankRepository.findDailyRank(key);
 
-        if (popularProducts.isEmpty()) {
+        if (productScores.isEmpty()) {
             log.info("일일 판매 링크가 존재하지 않습니다. date: {}", date);
             return;
         }
 
-        List<Rank> ranks = popularProducts.stream()
+        List<Rank> ranks = productScores.stream()
             .map(ps -> Rank.createSell(ps.getProductId(), date, ps.getTotalScore()))
             .toList();
 
@@ -50,5 +62,10 @@ public class RankService {
 
     private Rank createSell(RankCommand.Create command) {
         return Rank.createSell(command.getProductId(), command.getRankDate(), command.getScore());
+    }
+
+    private RankInfo.PopularProduct getProduct(RankInfo.ProductScore productScore) {
+        Product product = rankRepository.findProductById(productScore.getProductId());
+        return RankInfo.PopularProduct.of(product);
     }
 }

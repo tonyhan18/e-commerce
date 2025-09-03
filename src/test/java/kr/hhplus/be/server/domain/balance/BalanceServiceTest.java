@@ -17,7 +17,25 @@ class BalanceServiceTest extends MockTestSupport{
     private BalanceService balanceService;
 
     @Mock
+    private BalanceClient balanceClient;
+
+    @Mock
     private BalanceRepository balanceRepository;
+
+    @DisplayName("잔고 충전 시, 사용자가 존재해야 한다.")
+    @Test
+    void chargeShouldUser() {
+        // given
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(1L, 10_000L);
+
+        when(balanceClient.getUser(anyLong()))
+            .thenThrow(new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.chargeBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("사용자를 찾을 수 없습니다.");
+    }
 
     @DisplayName("잔고 충전 시, 충전 금액은 0보다 커야 한다.")
     @Test
@@ -55,6 +73,29 @@ class BalanceServiceTest extends MockTestSupport{
         assertThatThrownBy(() -> balanceService.chargeBalance(command))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("최대 금액을 초과할 수 없습니다.");
+    }
+
+    @DisplayName("잔고 충전 시, 사용자를 검증한다.")
+    @Test
+    void chargeBalanceWithGetUser() {
+        // given
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(1L, 10_000L);
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
+
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.empty());
+
+        when(balanceRepository.save(any(Balance.class)))
+            .thenReturn(balance);
+
+        // when
+        balanceService.chargeBalance(command);
+
+        // then
+        verify(balanceClient, times(1)).getUser(command.getUserId());
     }
 
     @DisplayName("잔고가 없으면, 잔고를 생성한다.")
@@ -171,6 +212,53 @@ class BalanceServiceTest extends MockTestSupport{
         assertThat(balance.getBalance()).isZero();
     }
 
+    @DisplayName("잔고가 없으면, 잔고를 차감하지 못한다.")
+    @Test
+    void refundBalanceIfNotExist() {
+        // given
+        BalanceCommand.Refund command = BalanceCommand.Refund.of(1L, 10_000L);
+
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.refundBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("잔고가 존재하지 않습니다.");
+    }
+
+    @DisplayName("환불 금액이 0이면 잔고를 차감하지 못한다.")
+    @Test
+    void refundBalanceWithZeroAmount() {
+        // given
+        BalanceCommand.Refund command = BalanceCommand.Refund.of(1L, 0L);
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
+
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.refundBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("환불 금액은 0보다 커야 합니다.");
+    }
+
+    @DisplayName("잔고 조회 시, 사용자가 존재해야 한다.")
+    @Test
+    void getBalanceShouldUser() {
+        // given
+        when(balanceClient.getUser(anyLong()))
+            .thenThrow(new IllegalArgumentException("사용자가 존재하지 않습니다."));
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.getBalance(anyLong()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("사용자가 존재하지 않습니다.");
+    }
+
     @DisplayName("잔고가 없으면 0을 반환한다.")
     @Test
     void getBalanceWithNotExist() {
@@ -202,5 +290,25 @@ class BalanceServiceTest extends MockTestSupport{
 
         // then
         assertThat(balanceInfo.getBalance()).isEqualTo(10_000L);
+    }
+
+    @DisplayName("잔고를 조회 시, 사용자를 검증한다.")
+    @Test
+    void getBalanceWithGetUser() {
+        // given
+        Balance balance = Balance.builder()
+            .userId(1L)
+            .balance(10_000L)
+            .build();
+
+        when(balanceRepository.findOptionalByUserId(anyLong()))
+            .thenReturn(Optional.of(balance));
+
+        // when
+        BalanceInfo.Balance balanceInfo = balanceService.getBalance(1L);
+
+        // then
+        assertThat(balanceInfo.getBalance()).isEqualTo(10_000L);
+        verify(balanceClient, times(1)).getUser(anyLong());
     }
 } 

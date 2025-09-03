@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.domain.rank;
 
+import kr.hhplus.be.server.domain.product.Product;
 import kr.hhplus.be.server.support.MockTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,31 +48,80 @@ class RankServiceUnitTest extends MockTestSupport {
 
     @DisplayName("인기 판매 랭크를 조회한다.")
     @Test
-    void getPopularSellRank() {
+    void getPopularProducts() {
         // given
-        List<RankInfo.PopularProduct> popularProducts = List.of(
-            RankInfo.PopularProduct.of(1L, 120L),  // 1등 상품
-            RankInfo.PopularProduct.of(2L, 95L),   // 2등 상품
-            RankInfo.PopularProduct.of(3L, 87L),   // 3등 상품
-            RankInfo.PopularProduct.of(4L, 76L),   // 4등 상품
-            RankInfo.PopularProduct.of(5L, 65L)   // 5등 상품
+        List<RankInfo.ProductScore> productScores = List.of(
+            RankInfo.ProductScore.of(1L, 120L),  // 1등 상품
+            RankInfo.ProductScore.of(2L, 95L),   // 2등 상품
+            RankInfo.ProductScore.of(3L, 87L),   // 3등 상품
+            RankInfo.ProductScore.of(4L, 76L),   // 4등 상품
+            RankInfo.ProductScore.of(5L, 65L)   // 5등 상품
         );
 
-        when(rankRepository.findPopularSellRanks(any()))
-            .thenReturn(popularProducts);
+        when(rankRepository.findProductScores(any()))
+            .thenReturn(productScores);
 
-        RankCommand.PopularSellRank command = RankCommand.PopularSellRank.of(
+        when(rankRepository.findProductById(anyLong()))
+            .thenReturn(Product.builder().id(1L).build())
+            .thenReturn(Product.builder().id(2L).build())
+            .thenReturn(Product.builder().id(3L).build())
+            .thenReturn(Product.builder().id(4L).build())
+            .thenReturn(Product.builder().id(5L).build());
+
+        RankCommand.PopularProducts command = RankCommand.PopularProducts.of(
             5,
             7,
             LocalDate.of(2025, 4, 30)
         );
 
         // when
-        RankInfo.PopularProducts result = rankService.getPopularSellRank(command);
+        RankInfo.PopularProducts result = rankService.getPopularProducts(command);
 
         // then
         assertThat(result.getProducts()).hasSize(5)
             .extracting(RankInfo.PopularProduct::getProductId)
             .containsExactly(1L, 2L, 3L, 4L, 5L);
+    }
+
+    @DisplayName("일일 판매 랭크를 영속화 한다.")
+    @Test
+    void persistDailyRank() {
+        // given
+        LocalDate date = LocalDate.of(2025, 5, 16);
+
+        List<RankInfo.ProductScore> products = List.of(
+            RankInfo.ProductScore.of(1L, 100L),
+            RankInfo.ProductScore.of(2L, 90L),
+            RankInfo.ProductScore.of(3L, 80L)
+        );
+
+        when(rankRepository.findDailyRank(any()))
+            .thenReturn(products);
+
+        // when
+        rankService.persistDailyRank(date);
+
+        // then
+        verify(rankRepository, times(1)).saveAll(any());
+        verify(rankRepository, times(1)).delete(any());
+    }
+
+    @DisplayName("일일 판매 랭크가 비어있으면 영속화 하지 않는다.")
+    @Test
+    void persistDailyRankWithEmpty() {
+        // given
+        LocalDate date = LocalDate.of(2025, 5, 16);
+
+        List<RankInfo.ProductScore> products = List.of();
+
+        when(rankRepository.findDailyRank(any()))
+            .thenReturn(products);
+
+        // when
+        rankService.persistDailyRank(date);
+
+        // then
+        verify(rankRepository, never()).saveAll(any());
+        verify(rankRepository, never()).delete(any());
     }
 }

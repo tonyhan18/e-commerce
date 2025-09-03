@@ -65,6 +65,10 @@ public class Payment {
         this.paymentStatus = PaymentStatus.COMPLETED;
     }
 
+    public void cancel() {
+        this.paymentStatus = PaymentStatus.CANCELED;
+    }
+    
     private static void validateAmount(Long amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("결제 금액은 0원 이상이어야 합니다.");

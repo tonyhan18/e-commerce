@@ -36,7 +36,7 @@ public class Order {
 
     private long discountPrice;
 
-    private LocalDateTime paidAt;
+    private LocalDateTime completedAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderProduct> orderProducts = new ArrayList<>();
@@ -65,9 +65,13 @@ public class Order {
                 .build();
     }
 
-    public void paid(LocalDateTime paidAt) {
-        this.orderStatus = OrderStatus.PAID;
-        this.paidAt = paidAt;
+    public void completed(LocalDateTime completedAt) {
+        this.orderStatus = OrderStatus.COMPLETED;
+        this.completedAt = completedAt;
+    }
+
+    public void cancel() {
+        this.orderStatus = OrderStatus.CANCELED;
     }
 
     private long calculateTotalPrice(List<OrderProduct> orderProducts) {

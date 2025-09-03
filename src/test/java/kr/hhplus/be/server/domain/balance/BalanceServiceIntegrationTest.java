@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.infrastructure.balance.BalanceTransactionalJpaRepository;
+import kr.hhplus.be.server.infrastructure.balance.repository.BalanceTransactionalJpaRepository;
 import kr.hhplus.be.server.support.IntegrationTestSupport;
 
 import java.util.List;
@@ -14,6 +14,9 @@ import static org.assertj.core.api.Assertions.*;
 
 @Transactional
 class BalanceServiceIntegrationTest extends IntegrationTestSupport{
+
+    @MockitoBean
+    private BalanceClient balanceClient;
 
     @Autowired
     private BalanceService balanceService;
@@ -24,25 +27,20 @@ class BalanceServiceIntegrationTest extends IntegrationTestSupport{
     @Autowired
     private BalanceTransactionalJpaRepository balanceTransactionalJpaRepository;
 
-    @DisplayName("잔고 충전 시, 잔고가 존재하면 충전 금액을 추가한다.")
+    @DisplayName("잔고 충전 시, 사용자가 존재해야 한다.")
     @Test
-    void chargeBalanceWhenBalanceExists() {
+    void chargeBalanceWhenUserDoesNotExist() {
         // given
-        Long userId = 1L;
-        Balance existingBalance = Balance.builder()
-            .userId(userId)
-            .balance(10_000L)
-            .build();
-        balanceRepository.save(existingBalance);
+        Long notExistUserId = 999L;
+        BalanceCommand.Charge command = BalanceCommand.Charge.of(notExistUserId, 10_000L);
 
-        BalanceCommand.Charge command = BalanceCommand.Charge.of(userId, 5_000L);
+        when(balanceClient.getUser(notExistUserId))
+            .thenThrow(new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // when
-        balanceService.chargeBalance(command);
-
-        // then
-        Balance updatedBalance = balanceRepository.findOptionalByUserId(userId).orElseThrow();
-        assertThat(updatedBalance.getBalance()).isEqualTo(15_000L);
+        // when & then
+        assertThatThrownBy(() -> balanceService.chargeBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("사용자를 찾을 수 없습니다.");
     }
 
     @DisplayName("잔고 충전 시, 잔고가 존재할 때 충전 금액이 양수이어야 한다.")
@@ -183,6 +181,59 @@ class BalanceServiceIntegrationTest extends IntegrationTestSupport{
             .hasMessage("잔액이 부족합니다.");
     }
 
+    @DisplayName("잔고 환불 시, 잔고가 없으면 예외를 발생시킨다.")
+    @Test
+    void refundBalanceWhenBalanceDoesNotExist() {
+        // given
+        Long userId = 1L;
+        BalanceCommand.Refund command = BalanceCommand.Refund.of(userId, 5_000L);
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.refundBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("잔고가 존재하지 않습니다.");
+    }
+
+    @DisplayName("잔고 환불 시, 환불 금액은 양수여야 한다.")
+    @Test
+    void refundBalanceWhenAmountIsNotPositive() {
+        // given
+        Long userId = 1L;
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(10_000L)
+            .build();
+        balanceRepository.save(existingBalance);
+
+        BalanceCommand.Refund command = BalanceCommand.Refund.of(userId, -5_000L);
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.refundBalance(command))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("환불 금액은 0보다 커야 합니다.");
+    }
+
+    @DisplayName("잔고를 환불 시, 잔고 금액을 환불한다.")
+    @Test
+    void refundBalanceWhenBalanceExists() {
+        // given
+        Long userId = 1L;
+        Balance existingBalance = Balance.builder()
+            .userId(userId)
+            .balance(10_000L)
+            .build();
+        balanceRepository.save(existingBalance);
+
+        BalanceCommand.Refund command = BalanceCommand.Refund.of(userId, 5_000L);
+
+        // when
+        balanceService.refundBalance(command);
+
+        // then
+        Balance updatedBalance = balanceRepository.findOptionalByUserId(userId).orElseThrow();
+        assertThat(updatedBalance.getBalance()).isEqualTo(15_000L);
+    }
+
     @DisplayName("잔고 충전 & 사용 시, 트랜잭션 내역을 저장한다.")
     @Test
     void saveBalanceTransactionAfterChargeBalanceAndUseBalance() {
@@ -203,6 +254,21 @@ class BalanceServiceIntegrationTest extends IntegrationTestSupport{
                 tuple(5_000L, BalanceTransactionType.CHARGE),
                 tuple(-2_000L, BalanceTransactionType.USE)
             );
+    }
+
+    @DisplayName("잔고 조회 시, 사용자가 존재해야 한다.")
+    @Test
+    void getBalanceWhenUserDoesNotExist() {
+        // given
+        Long notExistUserId = 999L;
+
+        when(balanceClient.getUser(notExistUserId))
+            .thenThrow(new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // when & then
+        assertThatThrownBy(() -> balanceService.getBalance(notExistUserId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("사용자를 찾을 수 없습니다.");
     }
 
     @DisplayName("잔고 조회 시, 잔고가 존재하면 잔고 정보를 반환한다.")
