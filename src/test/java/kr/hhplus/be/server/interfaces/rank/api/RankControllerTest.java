@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.interfaces.rank;
+package kr.hhplus.be.server.interfaces.rank.api;
 
 import kr.hhplus.be.server.domain.rank.RankInfo;
 import kr.hhplus.be.server.support.ControllerTestSupport;
