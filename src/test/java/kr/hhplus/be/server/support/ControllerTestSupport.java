@@ -8,7 +8,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import kr.hhplus.be.server.domain.balance.BalanceService;
-import kr.hhplus.be.server.application.order.OrderFacade;
+import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.product.ProductService;
 import kr.hhplus.be.server.domain.rank.RankService;
 import kr.hhplus.be.server.domain.coupon.CouponService;
@@ -36,7 +36,7 @@ public abstract class ControllerTestSupport {
     protected BalanceService balanceService;
 
     @MockitoBean
-    protected OrderFacade orderFacade;
+    protected OrderService orderService;
 
     @MockitoBean
     protected ProductService productService;

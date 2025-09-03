@@ -12,5 +12,7 @@ public interface OrderRepository {
 
     List<OrderProduct> findOrderIdsIn(List<Long> orderIds);
 
-    // List<OrderInfo.PaidProduct> findPaidProducts(OrderCommand.PaidProducts command);
+    void updateProcess(OrderCommand.Process command);
+
+    List<OrderProcess> getProcess(OrderKey key);
 }

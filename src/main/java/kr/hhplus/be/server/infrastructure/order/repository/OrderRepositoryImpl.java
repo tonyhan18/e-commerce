@@ -11,6 +11,7 @@ import java.util.List;
 public class OrderRepositoryImpl implements OrderRepository {
     
     private final OrderJpaRepository orderJpaRepository;
+    private final OrderRedisRepository orderRedisRepository;
     private final OrderProductJpaRepository orderProductJpaRepository;
 
     @Override
@@ -19,13 +20,23 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public Order findById(Long id) {
-        return orderJpaRepository.findById(id)
+    public Order findById(Long orderId) {
+        return orderJpaRepository.findById(orderId)
             .orElseThrow(() -> new IllegalArgumentException("주문이 존재하지 않습니다."));
     }
 
     @Override
     public List<OrderProduct> findOrderIdsIn(List<Long> orderIds) {
         return orderProductJpaRepository.findByOrderIdIn(orderIds);
+    }
+
+    @Override
+    public void updateProcess(OrderCommand.Process command) {
+        orderRedisRepository.updateProcess(command);
+    }
+
+    @Override
+    public List<OrderProcess> getProcess(OrderKey key) {
+        return orderRedisRepository.getProcess(key);
     }
 } 
