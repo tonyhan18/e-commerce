@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 class OrderEventListenerUnitTest extends MockTestSupport {
 
     @InjectMocks
-    private OrderEventListener eventListener;
+    private MessageOrderEventListener eventListener;
 
     @Mock
     private OrderService orderService;
