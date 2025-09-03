@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.infrastructure.stock;
+package kr.hhplus.be.server.infrastructure.stock.repository;
 
 import java.util.Optional;
 
