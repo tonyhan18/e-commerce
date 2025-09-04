@@ -17,7 +17,7 @@ public abstract class IntegrationTestSupport extends ContainerTestSupport{
     private RedisKeyCleaner redisKeyCleaner;
 
     @Autowired
-    private RedisCacheCleaner redisCacheCleaner;
+    protected RedisCacheCleaner redisCacheCleaner;
 
     @Autowired
     protected ApplicationEvents events;
