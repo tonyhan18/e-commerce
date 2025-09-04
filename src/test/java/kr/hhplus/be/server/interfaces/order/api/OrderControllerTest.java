@@ -1,77 +1,173 @@
 package kr.hhplus.be.server.interfaces.order.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.hhplus.be.server.application.order.OrderFacade;
-import kr.hhplus.be.server.interfaces.orders.api.OrderController;
-import kr.hhplus.be.server.interfaces.orders.api.OrderRequest;
-
-import org.junit.jupiter.api.BeforeEach;
+import kr.hhplus.be.server.domain.order.OrderInfo;
+import kr.hhplus.be.server.test.support.ControllerTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class OrderControllerTest {
+class OrderControllerTest extends ControllerTestSupport {
 
-    @Mock
-    private OrderFacade orderFacade;
-
-    @InjectMocks
-    private OrderController orderController;
-
-    private MockMvc mockMvc;
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(orderController).build();
-    }
-
+    @DisplayName("주문 시, 사용자 ID는 필수다.")
     @Test
-    @DisplayName("orderPayment API는 정상적으로 동작한다.")
-    void orderPayment() throws Exception {
+    void createOrderWithoutUserId() throws Exception {
         // given
-        OrderRequest.OrderProduct orderProduct = OrderRequest.OrderProduct.of(1L, 2);
-
-        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(1L, Arrays.asList(orderProduct), null);
-
-        String json = objectMapper.writeValueAsString(request);
+        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(
+            null,
+            1L,
+            List.of(OrderRequest.OrderProduct.of(1L, 1))
+        );
 
         // when & then
-        mockMvc.perform(post("/api/v1/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk());
-        verify(orderFacade, times(1)).orderPayment(any());
+        mockMvc.perform(
+                post("/api/v1/orders")
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(400))
+            .andExpect(jsonPath("$.message").value("사용자 ID는 필수 입니다."));
     }
 
+    @DisplayName("주문 시, 상품목록은 1개 이상 있어야 한다.")
     @Test
-    @DisplayName("쿠폰이 있는 주문 결제 API는 정상적으로 동작한다.")
-    void orderPaymentWithCoupon() throws Exception {
+    void createOrderWithEmptyProducts() throws Exception {
         // given
-        OrderRequest.OrderProduct orderProduct = OrderRequest.OrderProduct.of(1L, 1);
-
-        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(1L, Arrays.asList(orderProduct), 1L);
-
-        String json = objectMapper.writeValueAsString(request);
+        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(
+            1L,
+            1L,
+            List.of()
+        );
 
         // when & then
-        mockMvc.perform(post("/api/v1/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk());
-        verify(orderFacade, times(1)).orderPayment(any());
+        mockMvc.perform(
+                post("/api/v1/orders")
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(400))
+            .andExpect(jsonPath("$.message").value("상품 목록은 1개 이상이여야 합니다."));
     }
-} 
+
+    @DisplayName("주문 시, 상품목록의 상품 ID는 필수이다.")
+    @Test
+    void createOrderWithoutProductId() throws Exception {
+        // given
+        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(
+            1L,
+            1L,
+            List.of(
+                OrderRequest.OrderProduct.of(null, 1)
+            )
+        );
+
+        // when & then
+        mockMvc.perform(
+                post("/api/v1/orders")
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(400))
+            .andExpect(jsonPath("$.message").value("상품 ID는 필수입니다."));
+    }
+
+    @DisplayName("주문 시, 상품목록의 상품 구매 수량은 필수이다.")
+    @Test
+    void createOrderWithoutQuantity() throws Exception {
+        // given
+        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(
+            1L,
+            1L,
+            List.of(
+                OrderRequest.OrderProduct.of(1L, null)
+            )
+        );
+
+        // when & then
+        mockMvc.perform(
+                post("/api/v1/orders")
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(400))
+            .andExpect(jsonPath("$.message").value("상품 구매 수량은 필수입니다."));
+    }
+
+    @DisplayName("주문 시, 상품목록의 상품 구매 수량은 양수여야 한다.")
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0})
+    void createOrderWithNegativeOrZeroQuantity(int quantity) throws Exception {
+        // given
+        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(
+            1L,
+            1L,
+            List.of(
+                OrderRequest.OrderProduct.of(1L, quantity)
+            )
+        );
+
+        // when & then
+        mockMvc.perform(
+                post("/api/v1/orders")
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(400))
+            .andExpect(jsonPath("$.message").value("상품 구매 수량은 양수여야 합니다."));
+    }
+
+    @DisplayName("주문/결제를 한다.")
+    @Test
+    void createOrder() throws Exception {
+        // given
+        OrderRequest.OrderPayment request = OrderRequest.OrderPayment.of(
+            1L,
+            1L,
+            List.of(
+                OrderRequest.OrderProduct.of(1L, 2)
+            )
+        );
+
+        when(orderService.createOrder(any()))
+            .thenReturn(OrderInfo.Order.builder()
+                .orderId(1L)
+                .totalPrice(10000L)
+                .discountPrice(2000L)
+                .build());
+
+        // when & then
+        mockMvc.perform(
+                post("/api/v1/orders")
+                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(200))
+            .andExpect(jsonPath("$.message").value("OK"))
+            .andExpect(jsonPath("$.data.orderId").value(1L))
+            .andExpect(jsonPath("$.data.totalPrice").value(10000L))
+            .andExpect(jsonPath("$.data.discountPrice").value(2000L))
+        ;
+    }
+}

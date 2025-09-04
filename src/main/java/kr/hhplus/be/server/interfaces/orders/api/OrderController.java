@@ -14,8 +14,8 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("")
-    public ApiResponse<Void> orderPayment(@Valid @RequestBody OrderRequest.OrderPayment request) {
-        orderService.createOrder(request.toCommand()); 
-        return ApiResponse.success();
+    public ApiResponse<OrderResponse.Order> orderPayment(@Valid @RequestBody OrderRequest.OrderPayment request) {
+        OrderInfo.Order order = orderService.createOrder(request.toCommand());
+        return ApiResponse.success(OrderResponse.Order.of(order));
     }
 } 
