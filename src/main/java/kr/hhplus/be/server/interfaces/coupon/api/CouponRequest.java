@@ -25,8 +25,8 @@ public class CouponRequest {
             return new Publish(couponId);
         }
         
-        public CouponCommand.PublishRequest toCommand(Long id, LocalDateTime issuedAt) {
-            return CouponCommand.PublishRequest.of(id, couponId, issuedAt);
+        public CouponCommand.Publish toCommand(Long id) {
+            return CouponCommand.Publish.of(id, couponId);
         }
     }
 }

@@ -1,13 +1,13 @@
 package kr.hhplus.be.server.domain.rank;
 
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.transaction.annotation.Transactional;
-
 import kr.hhplus.be.server.domain.product.Product;
-import kr.hhplus.be.server.support.cache.CacheType;
-import lombok.extern.slf4j.Slf4j;
+import kr.hhplus.be.server.support.cache.CacheType.CacheName;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,28 +18,44 @@ import java.util.List;
 public class RankService {
 
     private final RankRepository rankRepository;
+    private final RankEventPublisher rankEventPublisher;
 
     public List<Rank> createSellRank(RankCommand.CreateList command) {
-        return command.getRanks().stream()
+        List<Rank> ranks = command.getRanks().stream()
             .map(this::createSell)
             .map(rankRepository::save)
             .toList();
+
+        RankEvent.Created event = RankEvent.Created.of(ranks);
+        rankEventPublisher.created(event);
+
+        return ranks;
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = CacheType.CacheName.POPULAR_PRODUCT, key = "'top:' + #command.top + ':days:' + #command.days")
+    @Cacheable(value = CacheName.POPULAR_PRODUCT, key = "'top:' + #command.top + ':days:' + #command.days")
     public RankInfo.PopularProducts cachedPopularProducts(RankCommand.PopularProducts command) {
         return getPopularProducts(command);
     }
 
+    @Transactional(readOnly = true)
+    @CachePut(value = CacheName.POPULAR_PRODUCT, key = "'top:' + #command.top + ':days:' + #command.days")
+    public RankInfo.PopularProducts updatedPopularProducts(RankCommand.PopularProducts command) {
+        return getPopularProducts(command);
+    }
+
+    @Transactional(readOnly = true)
     public RankInfo.PopularProducts getPopularProducts(RankCommand.PopularProducts command) {
         RankKey target = RankKey.ofDays(RankType.SELL, command.getDays());
         RankKeys sources = RankKeys.ofDaysWithDate(RankType.SELL, command.getDays(), command.getDate());
 
         RankCommand.Query query = RankCommand.Query.of(command.getTop(), target, sources);
-        List<RankInfo.PopularProduct> popularProducts = rankRepository.findPopularSellRanks(query);
+        List<RankInfo.PopularProduct> productScores = rankRepository.findProductScores(query)
+            .stream()
+            .map(this::getProduct)
+            .toList();
 
-        return RankInfo.PopularProducts.of(popularProducts);
+        return RankInfo.PopularProducts.of(productScores);
     }
 
     @Transactional
