@@ -33,6 +33,9 @@ class CouponServiceIntegrationTest extends IntegrationTestSupport {
     @MockitoSpyBean
     private CouponEventPublisher couponEventPublisher;
 
+    @MockitoSpyBean
+    private MessageProducer messageProducer;
+
     private CouponInfo.User user;
 
     @BeforeEach
@@ -320,7 +323,7 @@ class CouponServiceIntegrationTest extends IntegrationTestSupport {
 
         // then
         verify(couponEventPublisher, times(1)).publishRequested(any(CouponEvent.PublishRequested.class));
-        assertThat(events.stream(OutboxEvent.Manual.class).count()).isEqualTo(1);
+        verify(messageProducer, times(1)). send(any(Message.class));
     }
 
     @DisplayName("발급된 쿠폰이 없으면 발급되지 않는다.")
