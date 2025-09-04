@@ -49,7 +49,7 @@ public class CouponServiceConcurrencyTest extends ConcurrencyTestSupport {
         assertThat(successCount.get()).isEqualTo(3000);
         assertThat(failCount.get()).isZero();
 
-        Long size = redisTemplate.opsForZSet().size(CouponKey.of(couponId).generate());
+        Long size = redisTemplate.opsForZSet().size(CouponAvailableKey.of(couponId).generate());
         assertThat(size).isEqualTo(3000);
     }
 
@@ -87,7 +87,7 @@ public class CouponServiceConcurrencyTest extends ConcurrencyTestSupport {
         assertThat(successCount.get()).isEqualTo(1);
         assertThat(failCount.get()).isEqualTo(1);
 
-        Long size = redisTemplate.opsForZSet().size(CouponKey.of(couponId).generate());
+        Long size = redisTemplate.opsForZSet().size(CouponAvailableKey.of(couponId).generate());
         assertThat(size).isEqualTo(1);
     }
 }
