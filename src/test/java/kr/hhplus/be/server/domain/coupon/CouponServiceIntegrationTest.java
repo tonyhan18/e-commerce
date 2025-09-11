@@ -337,7 +337,7 @@ class CouponServiceIntegrationTest extends IntegrationTestSupport {
 
         // when & then
         assertThatThrownBy(() -> couponService.publishUserCoupon(command))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(CoreException.class)
             .hasMessage("이미 발급된 쿠폰입니다.");
     }
 
