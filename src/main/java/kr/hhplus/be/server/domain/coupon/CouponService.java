@@ -2,10 +2,10 @@ package kr.hhplus.be.server.domain.coupon;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import kr.hhplus.be.server.support.exception.CoreException;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -33,15 +33,14 @@ public class CouponService {
     }
 
     @Transactional(readOnly = true)
-    public CouponInfo.UsableCoupon getUsableCoupon(CouponCommand.UsableCoupon command) {
-        UserCoupon userCoupon = couponRepository.findByUserIdAndCouponId(command.getUserId(), command.getCouponId())
-            .orElseThrow(() -> new IllegalArgumentException("보유한 쿠폰을 찾을 수 없습니다."));
+    public CouponInfo.Coupon getUsableCoupon(Long userCouponId) {
+        UserCoupon userCoupon = couponRepository.findUserCouponById(userCouponId);
 
         if (userCoupon.cannotUse()) {
             throw new IllegalStateException("사용할 수 없는 쿠폰입니다.");
         }
-
-        return CouponInfo.UsableCoupon.of(userCoupon.getId());
+        
+        return couponRepository.findById(userCouponId);
     }
 
     public void requestPublishUserCoupon(CouponCommand.Publish command) {
@@ -58,9 +57,9 @@ public class CouponService {
     @Transactional
     public void publishUserCoupon(CouponCommand.Publish command) {
         couponRepository.findByUserIdAndCouponId(command.getUserId(), command.getCouponId())
-            .ifPresent(coupon -> {
-                throw new IllegalArgumentException("이미 발급된 쿠폰입니다.");
-            });
+        .ifPresent(coupon -> {
+            throw new CoreException("이미 발급된 쿠폰입니다.");
+        });
 
         Coupon coupon = couponRepository.findCouponById(command.getCouponId());
         coupon.publish();

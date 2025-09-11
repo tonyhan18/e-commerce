@@ -18,7 +18,7 @@ public class OrderPaymentMessageEventListener {
 
     private final OrderService orderService;
 
-    @KafkaListener(topics = Topic.PAYMENT_PAID, groupId = GroupId.ORDER)
+    @KafkaListener(topics = Topic.PAYMENT_PAID, groupId = GroupId.ORDER, concurrency = "3")
     public void handlePaymentPaid(String message, Acknowledgment ack) {
         log.info("결제 완료 이벤트 수신 {}", message);
 
@@ -30,9 +30,9 @@ public class OrderPaymentMessageEventListener {
         ack.acknowledge();
     }
 
-    @KafkaListener(topics = Topic.PAYMENT_FAILED, groupId = GroupId.ORDER)
-    public void handlePaymentFailed(String message, Acknowledgment ack) {
-        log.info("결제 실패 이벤트 수신 {}", message);
+    @KafkaListener(topics = Topic.ORDER_CREATED, groupId = GroupId.PAYMENT, concurrency = "3")
+    public void handleOrderCreated(String message, Acknowledgment ack) {
+        log.info("주문 생성 이벤트 수신 {}", message);
 
         Event<PaymentEvent.PayFailed> event = Event.of(message, PaymentEvent.PayFailed.class);
         PaymentEvent.PayFailed payload = event.getPayload();
@@ -42,9 +42,9 @@ public class OrderPaymentMessageEventListener {
         ack.acknowledge();
     }
 
-    @KafkaListener(topics = Topic.PAYMENT_CANCELED, groupId = GroupId.ORDER)
-    public void handlePaymentCanceled(String message, Acknowledgment ack) {
-        log.info("결제 취소 이벤트 수신 {}", message);
+    @KafkaListener(topics = Topic.ORDER_COMPLETED, groupId = GroupId.ORDER, concurrency = "3")
+    public void handleOrderCompleted(String message, Acknowledgment ack) {
+        log.info("주문 완료 이벤트 수신 {}", message);
 
         Event<PaymentEvent.Canceled> event = Event.of(message, PaymentEvent.Canceled.class);
         PaymentEvent.Canceled payload = event.getPayload();

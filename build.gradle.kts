@@ -45,6 +45,10 @@ dependencies {
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
 
+	// Actuator
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("io.micrometer:micrometer-registry-prometheus")
+
 	// QueryDSL
 	implementation("com.querydsl:querydsl-jpa:${querydslVersion}:jakarta")
 	annotationProcessor("com.querydsl:querydsl-apt:${querydslVersion}:jakarta")

@@ -13,12 +13,12 @@ public class PaymentApiClient implements PaymentClient {
     }
 
     @Override
-    public void useCoupon(Long userId, Long userCouponId) {
+    public void useCoupon(Long userCouponId) {
 
     }
 
     @Override
-    public PaymentInfo.Order getOrder(Long orderId) {
+    public PaymentInfo.Order getOrder(Long orderId) {   
         return null;
     }
 
