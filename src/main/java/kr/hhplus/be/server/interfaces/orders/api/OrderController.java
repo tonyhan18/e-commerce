@@ -13,6 +13,12 @@ import lombok.RequiredArgsConstructor;
 public class OrderController {
     private final OrderService orderService;
 
+    @GetMapping("/{orderId}")
+    public ApiResponse<OrderResponse.Order> getOrder(@PathVariable("orderId") Long orderId) {
+        OrderInfo.Order order = orderService.getOrder(orderId);
+        return ApiResponse.success(OrderResponse.Order.of(order));
+    }
+
     @PostMapping("")
     public ApiResponse<OrderResponse.Order> orderPayment(@Valid @RequestBody OrderRequest.OrderPayment request) {
         OrderInfo.Order order = orderService.createOrder(request.toCommand());
