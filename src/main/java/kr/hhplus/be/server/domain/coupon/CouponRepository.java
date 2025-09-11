@@ -19,6 +19,8 @@ public interface CouponRepository {
     Optional<UserCoupon> findByUserIdAndCouponId(Long userId, Long couponId);
 
     UserCoupon findUserCouponById(Long userCouponId);
+    
+    CouponInfo.Coupon findById(Long userCouponId);
 
     List<CouponInfo.Coupon> findByUserId(Long userId);
 
