@@ -28,4 +28,9 @@ public class ProductRepositoryImpl implements ProductRepository {
     public List<ProductInfo.Product> findSellingStatusIn(List<ProductSellingStatus> sellStatuses) {
         return productQueryDslRepository.findBySellStatusIn(sellStatuses);
     }
+
+    @Override
+    public List<ProductInfo.Product> findAll(ProductCommand.Query command) {
+        return productQueryDslRepository.findAll(command);
+    }
 } 
