@@ -10,5 +10,5 @@ public interface ProductRepository {
     Product save(Product product);
     Product findById(Long productId);
     List<ProductInfo.Product> findSellingStatusIn(List<ProductSellingStatus> sellStatuses);
-
+    List<ProductInfo.Product> findAll(ProductCommand.Query command);
 }
